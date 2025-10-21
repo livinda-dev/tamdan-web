@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { auth, provider, signInWithPopup } from "../../firebaseConfig";
+// Using custom backend Google OAuth flow
 
 interface GoogleSignInModalProps {
   isOpen: boolean;
@@ -16,12 +16,10 @@ const GoogleSignInModal: React.FC<GoogleSignInModalProps> = ({
 
   const handleGoogleSignIn = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      console.log("✅ Signed in as:", user.displayName);
-      onClose();
+      // Redirect to backend route to start Google OAuth
+      window.location.href = "/api/auth/google";
     } catch (error) {
-      console.error("❌ Error signing in:", error);
+      console.error("❌ Error starting Google OAuth:", error);
     }
   };
 

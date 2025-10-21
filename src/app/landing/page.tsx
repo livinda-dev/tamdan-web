@@ -1,6 +1,6 @@
 "use client";
 
-import React,{useState} from "react";
+import React, {useEffect, useState} from "react";
 import GoogleSignInModal from "./googleButton";
 
 export default function LandingPage() {
@@ -8,6 +8,15 @@ export default function LandingPage() {
   const handleOpenGoogle = () => {
     setIsGoogleModalOpen(true);
   };
+    useEffect(() => {
+        const raw = localStorage.getItem('session');
+        if (raw) {
+            const session = JSON.parse(raw);
+            if (session.id_token) {
+                window.location.href = '/profile';
+            }
+        }
+    }, []);
   return (
     <div className="min-h-screen bg-[#f8f6f2] text-gray-800 flex flex-col items-center px-6">
       {/* Announcement Bar */}
