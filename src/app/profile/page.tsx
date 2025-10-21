@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import NavBar from "@/components/NavBar";
 
 function decodeJwtPayload<T = any>(jwt?: string): T | null {
   if (!jwt) return null;
@@ -64,14 +64,14 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <main className="min-h-screen bg-white text-gray-900 p-8">
-      <h1 className="text-3xl font-semibold mb-4">Your Profile</h1>
-      <div className="space-y-2">
-        <p><span className="font-medium">Username:</span> {user.username}</p>
-        <p><span className="font-medium">Email:</span> {user.email ?? "—"}</p>
-      </div>
-      <div className="mt-8">
-        <Link href="/" className="text-blue-600 underline">Back to Home</Link>
+    <main className="min-h-screen bg-gray-50 text-gray-900">
+      <NavBar />
+      <div className="p-8">
+        <h1 className="text-3xl font-semibold mb-4">Your Profile</h1>
+        <div className="space-y-2">
+          <p><span className="font-medium">Username:</span> {user.username}</p>
+          <p><span className="font-medium">Email:</span> {user.email ?? "—"}</p>
+        </div>
       </div>
     </main>
   );
