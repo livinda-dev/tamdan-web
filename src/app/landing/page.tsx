@@ -2,8 +2,16 @@
 
 import React, {useEffect, useState} from "react";
 import GoogleSignInModal from "./googleButton";
+import NavBar from "@/components/NavBar";
+import {useRouter} from "next/navigation";
 
 export default function LandingPage() {
+    const router = useRouter();
+    const [idToken, setIdToken] = useState<string | null>(null);
+    const [content, setContent] = useState("");
+    const [status, setStatus] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const handleOpenGoogle = () => {
     setIsGoogleModalOpen(true);
@@ -17,98 +25,87 @@ export default function LandingPage() {
             }
         }
     }, []);
+    const onSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!idToken) {
+            setStatus("Not authenticated");
+            return;
+        }
+        if (!content.trim()) {
+            setStatus("Please enter something to submit.");
+            return;
+        }
+        setSubmitting(true);
+        setStatus(null);
+        const arrayContent = content.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+        try {
+
+            const res = await fetch("/api/entries", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({ content: arrayContent }),
+            });
+            const json = await res.json();
+            if (!res.ok || !json.ok) {
+                setStatus(json.error || "Failed to submit");
+            } else {
+                setStatus("Submitted successfully!");
+                setContent("");
+            }
+        } catch (e: any) {
+            setStatus(e?.message || "Network error");
+        } finally {
+            setSubmitting(false);
+        }
+    };
   return (
-    <div className="min-h-screen bg-[#f8f6f2] text-gray-800 flex flex-col items-center px-6">
-      {/* Announcement Bar */}
-      <div className="text-sm text-gray-500">
-        ✦ ANNOUNCING DISCOVERY DAILY:{" "}
-        <a
-          href="#"
-          className="underline hover:text-gray-700 transition-colors"
-        >
-          READ OUR LAUNCH STORY →
-        </a>
-      </div>
-
-      {/* Logo */}
-      <div className="mb-6">
-        <div className="w-12 h-12 rounded-full border border-gray-700 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-gray-700 rounded-full"></div>
-        </div>
-      </div>
-
+      <main className="min-h-screen background-color text-gray-900">
+          <NavBar/>
+    <div className="min-h-screen flex flex-col items-center px-6 py-[103px]">
       {/* Title */}
-      <h1 className="text-3xl md:text-4xl font-serif tracking-wider text-gray-900 mb-2 text-center">
-        តាមដាន Tamdan
-      </h1>
-
+        <p className="text-color tracking-widest text-center text-[36px] font-[TamdanRegular]">
+            Discover smarter searching with <span className="font-bold primary-color text-[30px]">TAMDAN</span>
+        </p>
       {/* Subtitle */}
-      <p className="text-gray-500 uppercase tracking-widest mb-10 text-center text-sm">
-        Personalized AI Search Agent System
+      <p className="text-color tracking-widest mb-10 text-center text-[36px] font-[TamdanRegular]">
+          an AI-powered agent that understands you better every time.
       </p>
 
-      {/* Description */}
-      <p className="text-center max-w-2xl text-gray-700 leading-relaxed mb-16">
-        <span className="font-semibold">Every morning</span>, receive a curated
-        digest of papers, repositories, discussions, and news from the last 24
-        hours{" "}
-        <span className="font-semibold">
-          tailored precisely to your interests.
-        </span>
-      </p>
+        <div className="w-[744px] ">
+            <p className="text-[16px] text-color mb-6 text-center ">_____Write your interests here_____</p>
+            <form onSubmit={onSubmit}>
+          <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={5}
+              placeholder="Write something to save in Supabase..."
+              className="w-full h-[320px] p-3 bg-white"
+          />
+                <div className="flex items-center space-x-3 absolute bottom-[10%] right-[27%] ">
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-[180px] text-[16px] h-[39px] bg-primary-color text-white px-2 py-2 rounded-md hover:bg-primary-color disabled:opacity-60"
+                    >
+                        {submitting ? "Submitting..." : "Generate your agent"}
+                    </button>
+                    {status && <span className="text-sm text-gray-700">{status}</span>}
+                </div>
+            </form>
+            <p className="text-[16px] text-color mb-6 text-center">““Find Better. Faster. With TAMDAN.””</p>
+        </div>
 
       {/* How it works */}
       <div className="text-center">
-        <h2 className="text-xs text-gray-500 tracking-widest mb-6">
-          HOW IT WORKS
-        </h2>
-
-        <div className="space-y-10 text-left max-w-lg mx-auto">
-          {/* Step 1 */}
-          <div className="flex items-start space-x-6">
-            <div className="text-gray-400 font-mono text-sm">01</div>
-            <div>
-              <h3 className="font-medium text-gray-900 mb-1">
-                List What You Want Monitored
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                From brain computer interfaces to NBA trades, new LLM releases
-                to DJ sets in your city.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 2 */}
-          <div className="flex items-start space-x-6">
-            <div className="text-gray-400 font-mono text-sm">02</div>
-            <div>
-              <h3 className="font-medium text-gray-900 mb-1">
-                AI Agents Search the Web
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Agents scan ArXiv, GitHub, HackerNews, and the broader web for
-                the most relevant content from the past 24 hours.
-              </p>
-            </div>
-          </div>
-          {/* Step 3 */}
-          <div className="flex items-start space-x-6">
-            <div className="text-gray-400 font-mono text-sm">03</div>
-            <div>
-              <h3 className="font-medium text-gray-900 mb-1">
-                Receive Your Daily Brief
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed ">
-                Wake up to a beautifully formatted newsletter with summaries, key insights, and links to dive deeper.
-              </p>
-            </div>
-          </div>
-        </div>
         <div>
             <button className=" bg-black text-white w-[200px] h-[50px] cursor-pointer" onClick={handleOpenGoogle}>Get Started</button>
         </div>
       </div>
       <GoogleSignInModal isOpen={isGoogleModalOpen} onClose={() => setIsGoogleModalOpen(false)} />
     </div>
+      </main>
     );
 }

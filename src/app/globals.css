@@ -1,8 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FCFAF4;
+  --foreground: #FCFAF4;
+}
+
+.primary-color {
+  color: #00355A;
+}
+.bg-primary-color {
+  background-color: #00355A;
+}
+.background-color {
+    background-color: #FCFAF4;
+}
+.text-color {
+    color: #000000;
+}
+
+.additional-color {
+    color: #F08400;
+}
+.bg-additional-color {
+    background-color: #F08400;
 }
 
 @theme inline {
@@ -19,8 +39,14 @@
   }
 }
 
+@font-face {
+    font-family: 'TamdanRegular';
+    src: url('/public/fonts/Barlow-Regular.ttf') format('ttf');
+    font-style: normal;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    font: 16px TamdanRegular;
 }

@@ -61,14 +61,16 @@ export default function SubmitPage() {
     }
     setSubmitting(true);
     setStatus(null);
+      const arrayContent = content.split("\n").map(line => line.trim()).filter(line => line.length > 0);
     try {
+
       const res = await fetch("/api/entries", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content: arrayContent }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
