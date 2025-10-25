@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
-function decodeJwtPayload<T = any>(jwt?: string): T | null {
+function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
   const parts = jwt.split(".");
   if (parts.length < 2) return null;
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: false, error: "Invalid id_token" }, { status: 401 });
     }
 
-    const body = await req.json().catch(() => null as any);
+    const body = await req.json().catch(() => null as unknown);
     const content = (body?.content ?? "").toString().trim();
     if (!content) {
       return Response.json({ ok: false, error: "Content is required" }, { status: 400 });
@@ -102,7 +102,15 @@ export async function POST(req: NextRequest) {
     }
 
     return Response.json({ ok: true, user_title: data?.[0] ?? null });
-  } catch (e: any) {
-    return Response.json({ ok: false, error: e?.message || "Unknown error" }, { status: 500 });
+  } catch (e: unknown) {
+      const message =
+          e instanceof Error
+              ? e.message
+              : typeof e === "string"
+                  ? e
+                  : "Unknown error";
+
+      return Response.json({ ok: false, error: message }, { status: 500 });
   }
+
 }

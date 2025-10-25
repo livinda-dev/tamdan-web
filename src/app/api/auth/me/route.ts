@@ -1,7 +1,7 @@
 // src/app/api/auth/me/route.ts
 import { cookies } from "next/headers";
 
-function base64UrlToJson<T = any>(b64url: string): T | null {
+function base64UrlToJson<T = unknown>(b64url: string): T | null {
   try {
     const json = Buffer.from(b64url, "base64url").toString("utf8");
     return JSON.parse(json) as T;
@@ -10,7 +10,7 @@ function base64UrlToJson<T = any>(b64url: string): T | null {
   }
 }
 
-function decodeJwtPayload<T = any>(jwt?: string): T | null {
+function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
   const parts = jwt.split(".");
   if (parts.length < 2) return null;

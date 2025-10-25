@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 
-function decodeJwtPayload<T = any>(jwt?: string): T | null {
+function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
   const parts = jwt.split(".");
   if (parts.length < 2) return null;
@@ -79,8 +79,9 @@ export default function SubmitPage() {
         setStatus("Submitted successfully!");
         setContent("");
       }
-    } catch (e: any) {
-      setStatus(e?.message || "Network error");
+    } catch (e: unknown) {
+      setStatus("Network error");
+        // setStatus(e?.message || "Network error");
     } finally {
       setSubmitting(false);
     }

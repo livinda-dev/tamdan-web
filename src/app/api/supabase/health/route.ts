@@ -34,10 +34,16 @@ export async function GET(_req: NextRequest) {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ ok: false, error: e?.message || "Unknown error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+  } catch (e: unknown) {
+      const message =
+          e instanceof Error
+              ? e.message
+              : typeof e === "string"
+                  ? e
+                  : "Unknown error";
+
+      return Response.json({ ok: false, error: message }, { status: 500 });
   }
 }
+
+

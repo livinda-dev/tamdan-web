@@ -55,8 +55,10 @@ export default function LandingPage() {
                 setStatus("Submitted successfully!");
                 setContent("");
             }
-        } catch (e: any) {
-            setStatus(e?.message || "Network error");
+        } catch (e: unknown) {
+            // setStatus(e?.message || "Network error");
+            setStatus("Network error");
+
         } finally {
             setSubmitting(false);
         }
