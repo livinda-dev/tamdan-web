@@ -2,6 +2,9 @@
 import { NextRequest } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
+// Ensure this route runs on the Node.js runtime (not Edge) so Buffer and service role work reliably
+export const runtime = "nodejs";
+
 function decodeJwtPayload<T = any>(jwt?: string): T | null {
   if (!jwt) return null;
   const parts = jwt.split(".");
@@ -108,7 +111,59 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Do NOT persist anything to Supabase. Per request, we avoid saving data to Supabase.
+  // Persist minimal user info to Supabase (best-effort; do not block login on failure)
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn("[OAuth Callback] Missing Supabase env vars; skipping persistence.");
+    } else if (!googleUser) {
+      console.warn("[OAuth Callback] Missing googleUser profile; skipping persistence.");
+    } else {
+      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.warn("[OAuth Callback] Using anon key for writes — ensure RLS allows insert into public.user or set SUPABASE_SERVICE_ROLE_KEY on server.");
+      }
+
+      const supabase = createSupabaseClient(supabaseUrl, supabaseKey, {
+        auth: { persistSession: false },
+      });
+
+      const email = googleUser.email ?? null;
+      const baseName = (googleUser.name || (email ? email.split("@")[0] : "Google User")).trim();
+      const username = baseName.substring(0, 100) || "Google User";
+
+      const payload: { username: string; email: string | null;  created_at: string } = {
+        username,
+        email,
+        created_at: new Date().toISOString(),
+      };
+
+      if (email) {
+        const { data, error } = await supabase
+          .from("user")
+          .upsert(payload, { onConflict: "email" })
+          .select();
+        if (error) {
+          console.error("[OAuth Callback] Supabase upsert error:", error.message);
+        } else {
+          console.log("[OAuth Callback] Supabase upsert success", { rows: data?.length || 0, user: data?.[0] });
+        }
+      } else {
+        const { data, error } = await supabase
+          .from("user")
+          .insert(payload)
+          .select();
+        if (error) {
+          console.error("[OAuth Callback] Supabase insert error:", error.message);
+        } else {
+          console.log("[OAuth Callback] Supabase insert success", { rows: data?.length || 0, user: data?.[0] });
+        }
+      }
+    }
+  } catch (e) {
+    console.error("[OAuth Callback] Exception during Supabase persistence:", e);
+  }
 
   // Return a tiny HTML page that stores the session in browser localStorage and then redirects
   const sessionObj = {
