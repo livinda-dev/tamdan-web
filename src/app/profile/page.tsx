@@ -64,7 +64,7 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <main className="min-h-screen bg-gray-50 text-gray-900">
+    <main className="min-h-screen background-color text-gray-900">
       <NavBar />
       <div className="p-8">
         <h1 className="text-3xl font-semibold mb-4">Your Profile</h1>

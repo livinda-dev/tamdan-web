@@ -79,10 +79,26 @@ export async function POST(req: NextRequest) {
     //   user_id bigint not null references public."user"(id) on delete cascade
     // );
 
-    const { data, error } = await supabase.from("user_title").insert(insertPayload).select();
-    if (error) {
-      console.error("[Entries API] insert into user_title error:", error.message);
-      return Response.json({ ok: false, error: error.message }, { status: 502 });
+    const { data:existingTitle, error:chckError } = await supabase.from("user_title").select("id,title").eq("user_id",userRow.id).maybeSingle();
+
+    if (chckError) {
+      console.error("[Entries API] insert into user_title error:", chckError.message);
+      return Response.json({ ok: false, error: chckError.message }, { status: 502 });
+    }
+    let data;
+    let error;
+    if(existingTitle){
+        const updateResult = await supabase.from("user_title").update({title:content}).eq("user_id",userRow.id).select();
+        data = updateResult.data;
+        error = updateResult.error;
+    } else {
+        const insertResult = await supabase.from("user_title").insert(insertPayload).select();
+        data = insertResult.data;
+        error = insertResult.error;
+    }
+    if(error){
+        console.error("[Entries API] insert/update into user_title error:", error.message);
+        return Response.json({ ok: false, error: error.message }, { status: 502 });
     }
 
     return Response.json({ ok: true, user_title: data?.[0] ?? null });
