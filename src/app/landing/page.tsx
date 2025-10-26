@@ -66,7 +66,7 @@ export default function LandingPage() {
   return (
       <main className="min-h-screen background-color text-gray-900">
           <NavBar/>
-    <div className="min-h-screen flex flex-col items-center px-6 py-[103px]">
+    <div className="min-h-screen flex flex-col items-center py-[103px]">
       {/* Title */}
         <p className="text-color tracking-widest text-center text-[36px] font-[TamdanRegular]">
             Discover smarter searching with <span className="font-bold primary-color text-[30px]">TAMDAN</span>
@@ -86,7 +86,7 @@ export default function LandingPage() {
               placeholder="Write something to save in Supabase..."
               className="w-full h-[320px] p-3 bg-white"
           />
-                <div className="flex items-center space-x-3 absolute bottom-[10%] right-[27%] ">
+                <div className="flex items-center space-x-3 absolute bottom-[13%] right-[27%] ">
                     <button
                         type="submit"
                         disabled={submitting}
@@ -100,13 +100,50 @@ export default function LandingPage() {
             <p className="text-[16px] text-color mb-6 text-center">““Find Better. Faster. With TAMDAN.””</p>
         </div>
 
-      {/* How it works */}
-      <div className="text-center">
-        <div>
-            <button className=" bg-black text-white w-[200px] h-[50px] cursor-pointer" onClick={handleOpenGoogle}>Get Started</button>
+        <div className="w-full bg-[#EFF0EC] px-[117px] py-[44px]">
+            <div >
+                <p className="text-[18px] leading-relaxed font-normal text-[#1A1A1A]">
+                  <span className="float-left text-[56px] font-[TamdanBold] leading-[0.8] mr-3 mt-1">
+                    T
+                  </span>
+                    AMDAN is an intelligent,
+                    AI-powered search companion designed to keep you informed and connected.
+                    Powered by advanced technologies like GPT-5 and n8n automation,
+                    TAMDAN goes beyond ordinary search — it gathers real-time news,
+                    analyzes trusted sources, and delivers  beyond ordinary search — it gathers real-time news,
+                    analyzes trusted sources, and delivers personalized insights that matter to you.
+                </p>
+            </div>
+            <div className="mt-[44px]">
+                <p>Stay ahead effortlessly with instant alerts through Telegram chatbot notifications or in-app messages whenever new updates match your interests.</p>
+            </div>
+            <div className="flex justify-around mt-[44px]">
+                <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
+                    <img src="/image/telegram.png" alt="Telegram" className="h-auto w-auto"/>
+                    <p className="text-[24px]">TELEGRAM CHATBOT</p>
+                </div>
+                <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
+                    <img src="/image/gmail.png" alt="Telegram" className="h-auto w-auto"/>
+                    <p className="text-[24px]">ALERT BY GMAIL</p>
+                </div>
+                <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
+                    <img src="/image/sms.png" alt="Telegram" className="h-auto w-auto"/>
+                    <p className="text-[24px]">SMS MESSAGE APP</p>
+                </div>
+            </div>
+            <div className="mt-[44px]">
+                <p>Whether it’s daily news, research insights, or topic-specific trends,
+                    TAMDAN ensures you never miss what’s important — your intelligent search partner,
+                    powered by AI.</p>
+            </div>
         </div>
-      </div>
-      <GoogleSignInModal isOpen={isGoogleModalOpen} onClose={() => setIsGoogleModalOpen(false)} />
+
+        <div>
+            <button className=" bg-black text-white w-[200px] h-[50px] cursor-pointer" onClick={handleOpenGoogle}>Get
+                Started
+            </button>
+        </div>
+        <GoogleSignInModal isOpen={isGoogleModalOpen} onClose={() => setIsGoogleModalOpen(false)} />
     </div>
       </main>
     );
