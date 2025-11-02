@@ -11,7 +11,7 @@ export default function Footer() {
                     </p>
                     <p>
                         <span className=" font-[TamdanBold]">Email:</span>
-                        tamdan.bycadtstudent@gmail.com
+                        tamdan.cadt@gmail.com
                     </p>
                 </div>
                 <Divider/>
