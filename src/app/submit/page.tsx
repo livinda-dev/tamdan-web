@@ -28,26 +28,26 @@ export default function SubmitPage() {
   const [submitting, setSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("session");
-      if (!raw) {
-        router.replace("/landing");
-        return;
-      }
-      const session = JSON.parse(raw) as { id_token?: string };
-      if (!session?.id_token) {
-        router.replace("/landing");
-        return;
-      }
-      setIdToken(session.id_token);
-      const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
-      setUserEmail(claims?.email ?? null);
-    } catch (e) {
-      console.error("Failed to read session", e);
-      router.replace("/landing");
-    }
-  }, [router]);
+  // useEffect(() => {
+  //   try {
+  //     const raw = localStorage.getItem("session");
+  //     if (!raw) {
+  //       router.replace("/landing");
+  //       return;
+  //     }
+  //     const session = JSON.parse(raw) as { id_token?: string };
+  //     if (!session?.id_token) {
+  //       router.replace("/landing");
+  //       return;
+  //     }
+  //     setIdToken(session.id_token);
+  //     const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
+  //     setUserEmail(claims?.email ?? null);
+  //   } catch (e) {
+  //     console.error("Failed to read session", e);
+  //     router.replace("/landing");
+  //   }
+  // }, [router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

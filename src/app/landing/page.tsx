@@ -5,6 +5,22 @@ import GoogleSignInModal from "./googleButton";
 import NavBar from "@/components/NavBar";
 import {useRouter} from "next/navigation";
 
+function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
+    if (!jwt) return null;
+    const parts = jwt.split(".");
+    if (parts.length < 2) return null;
+    const payloadB64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    try {
+        const padded = payloadB64 + "===".slice((payloadB64.length + 3) % 4);
+        const json = typeof window !== "undefined"
+            ? decodeURIComponent(escape(window.atob(padded)))
+            : Buffer.from(padded, "base64").toString("utf8");
+        return JSON.parse(json) as T;
+    } catch {
+        return null;
+    }
+}
+
 export default function LandingPage() {
     const router = useRouter();
     const [idToken, setIdToken] = useState<string | null>(null);
@@ -17,18 +33,33 @@ export default function LandingPage() {
     setIsGoogleModalOpen(true);
   };
     useEffect(() => {
-        const raw = localStorage.getItem('session');
-        if (raw) {
-            const session = JSON.parse(raw);
-            if (session.id_token) {
-                window.location.href = '/profile';
+        try {
+            const raw = localStorage.getItem("session");
+            if (!raw) {
+                router.replace("/landing");
+                // setIsGoogleModalOpen(true);
+                return;
             }
+            const session = JSON.parse(raw) as { id_token?: string };
+            if (!session?.id_token) {
+                // router.replace("/landing");
+                setIsGoogleModalOpen(true);
+                return;
+            }
+            setIdToken(session.id_token);
+            const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
+            setUserEmail(claims?.email ?? null);
+        } catch (e) {
+            console.error("Failed to read session", e);
+            // router.replace("/landing");
+            setIsGoogleModalOpen(true);
         }
-    }, []);
+    }, [router]);
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!idToken) {
-            setStatus("Not authenticated");
+            // setStatus("Not authenticated");
+            setIsGoogleModalOpen(true);
             return;
         }
         if (!content.trim()) {
@@ -65,7 +96,6 @@ export default function LandingPage() {
     };
   return (
       <main className="min-h-screen background-color text-gray-900">
-          <NavBar/>
     <div className="min-h-screen flex flex-col items-center py-[103px]">
       {/* Title */}
         <p className="text-color tracking-widest text-center text-[36px] font-[TamdanRegular]">
@@ -76,7 +106,7 @@ export default function LandingPage() {
           an AI-powered agent that understands you better every time.
       </p>
 
-        <div className="w-[744px] ">
+        <div className="w-[744px]">
             <p className="text-[16px] text-color mb-6 text-center ">_____Write your interests here_____</p>
             <form onSubmit={onSubmit}>
           <textarea
@@ -138,11 +168,13 @@ export default function LandingPage() {
             </div>
         </div>
 
-        <div>
-            <button className=" bg-black text-white w-[200px] h-[50px] cursor-pointer" onClick={handleOpenGoogle}>Get
-                Started
-            </button>
-        </div>
+        {/*{*/}
+        {/*    !idToken&&<div>*/}
+        {/*        <button className=" bg-black text-white w-[200px] h-[50px] cursor-pointer" onClick={handleOpenGoogle}>Get*/}
+        {/*            Started*/}
+        {/*        </button>*/}
+        {/*    </div>*/}
+        {/*}*/}
         <GoogleSignInModal isOpen={isGoogleModalOpen} onClose={() => setIsGoogleModalOpen(false)} />
     </div>
       </main>
