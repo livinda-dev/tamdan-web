@@ -53,5 +53,9 @@
 body {
   background: var(--background);
   color: var(--foreground);
-    font: 24px TamdanRegular;
+  font: 24px TamdanRegular;
+}
+
+.font-tamdan-bold {
+  font: 24px TamdanBold;
 }

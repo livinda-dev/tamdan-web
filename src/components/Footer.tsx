@@ -3,7 +3,7 @@ import Divider from "@/components/divider";
 export default function Footer() {
     return (
         <footer className="bg-primary-color text-white py-[48px]">
-            <div className="container">
+            <div className="">
                 <div className="sm:px-[120px] lg:px-[120px] px-[120px]">
                     <p className="font-[TamdanRegular]">
                         <span className="font-[TamdanBold]">Address: </span>
