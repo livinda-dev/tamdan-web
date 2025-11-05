@@ -5,7 +5,7 @@ export default function SampleNews({
 }) {
   return (
     <div
-      className="relative bg-[#FCFAF4] text-gray-800 max-h-[90vh] overflow-y-auto p-8 shadow-xl max-w-5xl mx-auto rounded-md border border-gray-300"
+      className="relative bg-[#FCFAF4] text-gray-800 max-h-[100vh] overflow-y-auto p-8 shadow-xl max-w-5xl mx-auto rounded-md border border-gray-300"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Close Button */}
