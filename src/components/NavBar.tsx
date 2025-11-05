@@ -54,7 +54,7 @@ export default function NavBar() {
                     <Link href="/explore" className={linkClass("/explore")}>
                         EXPLORES
                     </Link>
-                    <Link href="/submit" className={linkClass("/submit")}>
+                    <Link href="/faqs" className={linkClass("/faqs")}>
                         FAQs
                     </Link>
                 </div>
@@ -64,7 +64,7 @@ export default function NavBar() {
                   isLoggedIn ? (
                       <button
                           onClick={logout}
-                          className="bg-red-600 text-white px-3 py-2 rounded-md text-sm hover:bg-red-500"
+                          className="bg-primary-color text-white px-3 cursor-pointer py-2 rounded-md text-sm hover:bg-red-500"
                       >
                           Logout
                       </button>
