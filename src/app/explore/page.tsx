@@ -128,6 +128,7 @@ export default function ExplorePage() {
           <SampleNews setIsOpenNewsModal={setIsOpenNewsModal} />
         </div>
       )}
+      <p className="pt-[49px]">In just a few guided steps, TAMDAN transforms the way you discover and receive information — smart, simple, and personalized by AI.</p>
     </div>
   );
 }
