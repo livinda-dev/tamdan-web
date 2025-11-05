@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 
-function decodeJwtPayload<T = any>(jwt?: string): T | null {
+function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
   const parts = jwt.split(".");
   if (parts.length < 2) return null;
@@ -28,26 +28,26 @@ export default function SubmitPage() {
   const [submitting, setSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("session");
-      if (!raw) {
-        router.replace("/landing");
-        return;
-      }
-      const session = JSON.parse(raw) as { id_token?: string };
-      if (!session?.id_token) {
-        router.replace("/landing");
-        return;
-      }
-      setIdToken(session.id_token);
-      const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
-      setUserEmail(claims?.email ?? null);
-    } catch (e) {
-      console.error("Failed to read session", e);
-      router.replace("/landing");
-    }
-  }, [router]);
+  // useEffect(() => {
+  //   try {
+  //     const raw = localStorage.getItem("session");
+  //     if (!raw) {
+  //       router.replace("/landing");
+  //       return;
+  //     }
+  //     const session = JSON.parse(raw) as { id_token?: string };
+  //     if (!session?.id_token) {
+  //       router.replace("/landing");
+  //       return;
+  //     }
+  //     setIdToken(session.id_token);
+  //     const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
+  //     setUserEmail(claims?.email ?? null);
+  //   } catch (e) {
+  //     console.error("Failed to read session", e);
+  //     router.replace("/landing");
+  //   }
+  // }, [router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,8 +79,9 @@ export default function SubmitPage() {
         setStatus("Submitted successfully!");
         setContent("");
       }
-    } catch (e: any) {
-      setStatus(e?.message || "Network error");
+    } catch (e: unknown) {
+      setStatus("Network error");
+        // setStatus(e?.message || "Network error");
     } finally {
       setSubmitting(false);
     }
@@ -88,7 +89,6 @@ export default function SubmitPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900">
-      <NavBar />
       <div className="max-w-2xl mx-auto p-6">
         <h1 className="text-2xl font-semibold mb-4">Submit Content</h1>
         <p className="text-sm text-gray-600 mb-6">Signed in as: {userEmail ?? "Unknown"}</p>

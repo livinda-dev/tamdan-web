@@ -5,7 +5,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 // Ensure this route runs on the Node.js runtime (not Edge) so Buffer and service role work reliably
 export const runtime = "nodejs";
 
-function decodeJwtPayload<T = any>(jwt?: string): T | null {
+function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
   const parts = jwt.split(".");
   if (parts.length < 2) return null;
@@ -174,7 +174,7 @@ export async function GET(req: NextRequest) {
   };
 
   const sessionB64 = Buffer.from(JSON.stringify(sessionObj)).toString("base64");
-  const redirectTo = siteUrl + "/profile"; // go directly to profile; landing will also work
+  const redirectTo = siteUrl; // go directly to profile; landing will also work
 
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Signing you in…</title></head>

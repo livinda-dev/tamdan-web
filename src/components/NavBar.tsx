@@ -2,13 +2,18 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
+import GoogleSignInModal from "@/app/landing/googleButton";
 
 
 export default function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+    const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+    const handleOpenGoogle = () => {
+        setIsGoogleModalOpen(true);
+    };
 
   const logout = () => {
     try {
@@ -28,12 +33,12 @@ export default function NavBar() {
 
   const linkClass = (path: string) =>
     `px-3 py-2 rounded-md text-sm font-medium ${
-      pathname === path ? " underline text-color" : "text-color hover:bg-gray-700 hover:text-white"
+      pathname === path ? " underline text-color" : "text-color"
     }`;
 
   return (
-    <nav className="background-color shadow-md ">
-      <div className="mx-auto px-[120px] sm:px-[120px] lg:px-[120px]">
+    <nav className="background-color shadow-md">
+      <div className="mx-auto sm:px-[120px] lg:px-[120px] px-[120px]">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <div>
@@ -43,10 +48,10 @@ export default function NavBar() {
           </div>
             <div>
                 <div className="ml-10 flex items-baseline space-x-4">
-                    <Link href="/profile" className={linkClass("/profile")}>
+                    <Link href="/" className={linkClass("/")}>
                         INTERESTS
                     </Link>
-                    <Link href="/submit" className={linkClass("/submit")}>
+                    <Link href="/explore" className={linkClass("/explore")}>
                         EXPLORES
                     </Link>
                     <Link href="/submit" className={linkClass("/submit")}>
@@ -66,13 +71,13 @@ export default function NavBar() {
                   ):(
                       <div>
                           <button
-                              onClick={logout}
+                              onClick={handleOpenGoogle}
                               className="bg-primary-color text-white px-3 py-2 rounded-md text-sm cursor-pointer"
                           >
                               SIGN UP
                           </button>
                           <button
-                              onClick={logout}
+                              onClick={handleOpenGoogle}
                               className="text-color px-3 py-2 rounded-md text-sm font-bold cursor-pointer"
                           >
                               LOGIN
@@ -84,6 +89,7 @@ export default function NavBar() {
           </div>
         </div>
       </div>
+        <GoogleSignInModal isOpen={isGoogleModalOpen} onClose={() => setIsGoogleModalOpen(false)} />
     </nav>
   );
 }

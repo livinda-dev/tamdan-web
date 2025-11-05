@@ -45,8 +45,17 @@
     font-style: normal;
 }
 
+@font-face {
+    font-family: 'TamdanBold';
+    src: url('/public/fonts/Barlow-Bold.ttf') format('ttf');
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-    font: 16px TamdanRegular;
+  font: 24px TamdanRegular;
+}
+
+.font-tamdan-bold {
+  font: 24px TamdanBold;
 }
