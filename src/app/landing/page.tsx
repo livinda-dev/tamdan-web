@@ -194,7 +194,16 @@ export default function LandingPage() {
                 alert("Please sign in first.");
                 return;
               }
-              window.location.href = `https://t.me/tamdanNewsBot?start=${userEmail}`;
+
+              const deepLink = `tg://resolve?domain=tamdanNewsBot&start=${userEmail}`;
+
+              // Try to open Telegram App directly
+              window.location.href = deepLink;
+
+              // Fallback if tg:// is blocked (e.g., iOS Safari)
+              setTimeout(() => {
+                window.location.href = `https://t.me/tamdanNewsBot?start=${userEmail}`;
+              }, 500);
             }}
           >
             <img
