@@ -194,7 +194,7 @@ export default function LandingPage() {
                 alert("Please sign in first.");
                 return;
               }
-              window.location.href = `https://t.me/@tamdanNewsBot?start=${userEmail}`;
+              window.location.href = `https://t.me/tamdanNewsBot?start=${userEmail}`;
             }}
           >
             <img
