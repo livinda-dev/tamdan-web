@@ -187,7 +187,16 @@ export default function LandingPage() {
           </p>
         </div>
         <div className="flex justify-around mt-[44px]">
-          <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
+          <div
+            className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px]"
+            onClick={() => {
+              if (!userEmail) {
+                alert("Please sign in first.");
+                return;
+              }
+              window.location.href = `https://t.me/@tamdanNewsBot?start=${userEmail}`;
+            }}
+          >
             <img
               src="/image/telegram.png"
               alt="Telegram"
@@ -195,6 +204,7 @@ export default function LandingPage() {
             />
             <p className="text-[24px]">TELEGRAM CHATBOT</p>
           </div>
+
           <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
             <img src="/image/gmail.png" alt="Gmail" className="h-auto w-auto" />
             <p className="text-[24px]">ALERT BY GMAIL</p>
