@@ -195,14 +195,13 @@ export default function LandingPage() {
                 return;
               }
 
-              const deepLink = `tg://resolve?domain=tamdanNewsBot&start=${userEmail}`;
+              const emailParam = encodeURIComponent(userEmail);
 
-              // Try to open Telegram App directly
+              const deepLink = `tg://resolve?domain=tamdanNewsBot&startapp=${emailParam}`;
               window.location.href = deepLink;
 
-              // Fallback if tg:// is blocked (e.g., iOS Safari)
               setTimeout(() => {
-                window.location.href = `https://t.me/tamdanNewsBot?start=${userEmail}`;
+                window.location.href = `https://t.me/tamdanNewsBot?startapp=${emailParam}`;
               }, 500);
             }}
           >
