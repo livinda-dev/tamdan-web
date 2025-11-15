@@ -197,11 +197,11 @@ export default function LandingPage() {
 
               const emailParam = encodeURIComponent(userEmail);
 
-              const deepLink = `tg://resolve?domain=tamdanNewsBot&startapp=${emailParam}`;
+              const deepLink = `tg://resolve?domain=tamdanNewsBot&start=${emailParam}`;
               window.location.href = deepLink;
 
               setTimeout(() => {
-                window.location.href = `https://t.me/tamdanNewsBot?startapp=${emailParam}`;
+                window.location.href = `https://t.me/tamdanNewsBot?start=${emailParam}`;
               }, 500);
             }}
           >
