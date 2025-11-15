@@ -10,33 +10,42 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as SaveChatIdRequest;
 
+    console.log("📩 API CALLED");
+    console.log("📩 BODY:", body);
+
     const { email, chat_id } = body;
 
-    if (!email || !chat_id) {
-      return NextResponse.json(
-        { error: "Missing email or chat_id" },
-        { status: 400 }
-      );
-    }
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("user")
       .update({ chat_id })
-      .eq("email", email);
+      .eq("email", email)
+      .select();
+
+    console.log("🛠 Supabase Result:", data, error);
 
     if (error) {
       return NextResponse.json({ error }, { status: 400 });
     }
 
+    if (data.length === 0) {
+      return NextResponse.json(
+        { error: "Email not found in Supabase", email },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({ success: true });
   } catch (err) {
+    console.error("❌ API ERROR:", err);
     return NextResponse.json(
       { error: "Invalid request format" },
       { status: 400 }
     );
   }
 }
+
