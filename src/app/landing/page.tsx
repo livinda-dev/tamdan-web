@@ -197,14 +197,8 @@ export default function LandingPage() {
 
               const emailParam = encodeURIComponent(userEmail);
 
-              // Open Telegram App (native)
-              const deepLink = `tg://resolve?domain=tamdanNewsBot&startapp=${emailParam}`;
-              window.location.href = deepLink;
-
-              // Fallback for browsers that block tg://
-              setTimeout(() => {
-                window.location.href = `https://t.me/tamdanNewsBot?startapp=${emailParam}`;
-              }, 500);
+              // Mobile & some desktop clients will auto-send `/start email`
+              window.location.href = `https://t.me/tamdanNewsBot?start=${emailParam}`;
             }}
           >
             <img
