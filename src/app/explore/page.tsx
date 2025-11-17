@@ -63,6 +63,7 @@ export default function ExplorePage() {
                   disabled
                   rows={5}
                   placeholder={defaultPlaceholder}
+                  
                   className="w-full h-[320px] px-[35px] py-[30px] bg-white"
                 />
                 <div className="absolute bottom-4 right-4">
