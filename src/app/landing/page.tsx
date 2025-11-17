@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import GoogleSignInModal from "./googleButton";
 import GenerateAgentButton from "./GenerateAgentButton";
 import { useRouter } from "next/navigation";
+import Alert from "@/components/alert";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
@@ -31,6 +32,11 @@ export default function LandingPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [savedContent, setSavedContent] = useState<string | null>(null);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [isALertOpen, setIsAlertOpen] = useState(false);
+  const [alertText, setAlertText] = useState("");
+  const [alertStatus, setAlertStatus] = useState<"error" | "success" | "info">(
+    "info"
+  );
 
   const defaultPlaceholder = `. Gold market and Impact
 . Cease fire between Israel and Hamas
@@ -98,57 +104,78 @@ export default function LandingPage() {
   };
 
   const onSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!idToken) {
-    setIsGoogleModalOpen(true);
-    return;
-  }
-
-  // Convert textarea into array
-  let arrayContent = content
-    .split("\n")
-    .map((line) => line.replace(/^- /, "").trim())
-    .filter((line) => line.length > 0);
-
-  // ❌ Block if more than 5 topics
-  if (arrayContent.length > 5) {
-    setStatus("You can only submit up to 5 topics.");
-    return;
-  }
-
-  if (arrayContent.length === 0) {
-    setStatus("Please enter at least 1 topic.");
-    return;
-  }
-
-  setSubmitting(true);
-  setStatus(null);
-
-  try {
-    const res = await fetch("/api/entries", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify({ content: arrayContent }),
-    });
-
-    const json = await res.json();
-    if (!res.ok || !json.ok) {
-      setStatus(json.error || "Failed to submit");
-    } else {
-      setStatus("Submitted successfully!");
-      setSavedContent(arrayContent.join(","));
+    if (!idToken) {
+      setIsGoogleModalOpen(true);
+      return;
     }
-  } catch {
-    setStatus("Network error");
-  } finally {
-    setSubmitting(false);
-  }
-};
 
+    // Convert textarea into array
+    let arrayContent = content
+      .split("\n")
+      .map((line) => line.replace(/^- /, "").trim())
+      .filter((line) => line.length > 0);
+
+    // ❌ Block if more than 5 topics
+    if (arrayContent.length > 5) {
+      setStatus("You can only submit up to 5 topics.");
+      return;
+    }
+
+    if (arrayContent.length === 0) {
+      setStatus("Please enter at least 1 topic.");
+      return;
+    }
+
+    setSubmitting(true); // show loading overlay
+
+    for (let topic of arrayContent) {
+      const res = await fetch("/api/moderate-topic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic }),
+      });
+
+      const json = await res.json();
+
+      if (json.status === "UNSAFE") {
+        setSubmitting(false); // hide loading
+        setAlertText(
+          `❌ Topic not allowed:\n"${topic}"\n\nReason: ${json.reason}`
+        );
+        setAlertStatus("error");
+        setIsAlertOpen(true);
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    setStatus(null);
+
+    try {
+      const res = await fetch("/api/entries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ content: arrayContent }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        setStatus(json.error || "Failed to submit");
+      } else {
+        setStatus("Submitted successfully!");
+        setSavedContent(arrayContent.join(","));
+      }
+    } catch {
+      setStatus("Network error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center">
@@ -169,41 +196,60 @@ export default function LandingPage() {
         <form onSubmit={onSubmit}>
           <div className="relative">
             <textarea
-  value={content}
-  onChange={(e) => {
-    let value = e.target.value;
+              value={content}
+              onChange={(e) => {
+                let value = e.target.value;
 
-    // Split into lines
-    let lines = value.split("\n");
+                let lines = value.split("\n");
 
-    // Enforce max 5 topics
-    if (lines.length > 5) {
-      lines = lines.slice(0, 5); // keep only first 5 lines
-    }
+                // Count only non-empty lines (ignore blank lines)
+                const nonEmptyCount = lines.filter(
+                  (l) => l.trim() !== ""
+                ).length;
 
-    // Ensure each non-empty line starts with "- "
-    const fixed = lines
-      .map((line) => {
-        const trimmed = line.trim();
-        if (trimmed === "") return "";
-        return trimmed.startsWith("- ") ? trimmed : `- ${trimmed}`;
-      })
-      .join("\n");
+                if (nonEmptyCount > 5) {
+                  setAlertText("You can only submit up to 5 topics.");
+                  setAlertStatus("error");
+                  setIsAlertOpen(true);
 
-    setContent(fixed);
-  }}
-  rows={5}
-  placeholder={
-    savedContent
-      ? ""
-      : `- Gold market and Impact
+                  // keep only first 5 non-empty lines, but allow blank lines
+                  let count = 0;
+                  lines = lines.filter((line) => {
+                    if (line.trim() === "") return true;
+                    if (count < 5) {
+                      count++;
+                      return true;
+                    }
+                    return false;
+                  });
+                }
+
+                const formatted = lines
+                  .map((line) => {
+                    // Allow blank lines normally
+                    if (line.trim() === "") return "";
+
+                    // Remove ONLY one leading dash + optional space
+                    const withoutDash = line.replace(/^-\s?/, "");
+
+                    // Final line must always start with "- "
+                    return `- ${withoutDash}`;
+                  })
+                  .join("\n");
+
+                setContent(formatted);
+              }}
+              rows={5}
+              placeholder={
+                savedContent
+                  ? ""
+                  : `- Gold market and Impact
 - Cease fire between Israel and Hamas
 - Human jobs that AI may eliminate`
-  }
-  maxLength={200}
-  className="w-full h-[320px] px-[35px] py-[30px] bg-white"
-/>
-
+              }
+              maxLength={200}
+              className="w-full h-[320px] px-[35px] py-[30px] bg-white"
+            />
 
             <GenerateAgentButton submitting={submitting} onSubmit={onSubmit} />
           </div>
@@ -281,6 +327,22 @@ export default function LandingPage() {
         isOpen={isGoogleModalOpen}
         onClose={() => setIsGoogleModalOpen(false)}
       />
+      <Alert
+        text={alertText}
+        status={alertStatus}
+        isOpen={isALertOpen}
+        onClose={() => setIsAlertOpen(false)}
+      />
+      {submitting && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+          <div className="bg-white px-8 py-6 rounded-xl shadow-lg text-center">
+            <div className="loader border-4 border-gray-300 border-t-blue-500 rounded-full w-12 h-12 mx-auto animate-spin"></div>
+            <p className="mt-4 text-gray-700 text-lg font-medium">
+              Checking your topics...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
