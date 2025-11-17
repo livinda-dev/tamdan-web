@@ -47,7 +47,16 @@ export default function LandingPage() {
       if (json.ok) {
         const dbContent = json.title || ""; // comma separated from DB
         setSavedContent(dbContent);
-        setContent(dbContent ? dbContent.split(",").join("\n") : "");
+        if (dbContent) {
+          const withDashes = dbContent
+            .split(",")
+            .map((t: string) => `- ${t.trim()}`)
+            .join("\n");
+
+          setContent(withDashes);
+        } else {
+          setContent("");
+        }
       } else {
         setContent("");
       }
@@ -89,46 +98,57 @@ export default function LandingPage() {
   };
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!idToken) {
-      setIsGoogleModalOpen(true);
-      return;
-    }
-    if (!content.trim()) {
-      setStatus("Please enter something to submit.");
-      return;
-    }
-    setSubmitting(true);
-    setStatus(null);
+  e.preventDefault();
 
-    // Convert multiline textarea to comma-separated array
-    const arrayContent = content
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+  if (!idToken) {
+    setIsGoogleModalOpen(true);
+    return;
+  }
 
-    try {
-      const res = await fetch("/api/entries", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ content: arrayContent }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        setStatus(json.error || "Failed to submit");
-      } else {
-        setStatus("Submitted successfully!");
-        setSavedContent(arrayContent.join(",")); // store comma string
-      }
-    } catch (e) {
-      setStatus("Network error");
-    } finally {
-      setSubmitting(false);
+  // Convert textarea into array
+  let arrayContent = content
+    .split("\n")
+    .map((line) => line.replace(/^- /, "").trim())
+    .filter((line) => line.length > 0);
+
+  // ❌ Block if more than 5 topics
+  if (arrayContent.length > 5) {
+    setStatus("You can only submit up to 5 topics.");
+    return;
+  }
+
+  if (arrayContent.length === 0) {
+    setStatus("Please enter at least 1 topic.");
+    return;
+  }
+
+  setSubmitting(true);
+  setStatus(null);
+
+  try {
+    const res = await fetch("/api/entries", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ content: arrayContent }),
+    });
+
+    const json = await res.json();
+    if (!res.ok || !json.ok) {
+      setStatus(json.error || "Failed to submit");
+    } else {
+      setStatus("Submitted successfully!");
+      setSavedContent(arrayContent.join(","));
     }
-  };
+  } catch {
+    setStatus("Network error");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex flex-col items-center">
@@ -149,12 +169,42 @@ export default function LandingPage() {
         <form onSubmit={onSubmit}>
           <div className="relative">
             <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={5}
-              placeholder={savedContent ? "" : defaultPlaceholder}
-              className="w-full h-[320px] px-[35px] py-[30px] bg-white"
-            />
+  value={content}
+  onChange={(e) => {
+    let value = e.target.value;
+
+    // Split into lines
+    let lines = value.split("\n");
+
+    // Enforce max 5 topics
+    if (lines.length > 5) {
+      lines = lines.slice(0, 5); // keep only first 5 lines
+    }
+
+    // Ensure each non-empty line starts with "- "
+    const fixed = lines
+      .map((line) => {
+        const trimmed = line.trim();
+        if (trimmed === "") return "";
+        return trimmed.startsWith("- ") ? trimmed : `- ${trimmed}`;
+      })
+      .join("\n");
+
+    setContent(fixed);
+  }}
+  rows={5}
+  placeholder={
+    savedContent
+      ? ""
+      : `- Gold market and Impact
+- Cease fire between Israel and Hamas
+- Human jobs that AI may eliminate`
+  }
+  maxLength={200}
+  className="w-full h-[320px] px-[35px] py-[30px] bg-white"
+/>
+
+
             <GenerateAgentButton submitting={submitting} onSubmit={onSubmit} />
           </div>
         </form>
