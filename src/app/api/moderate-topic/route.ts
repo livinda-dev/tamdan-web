@@ -90,10 +90,14 @@ export async function POST(request: Request) {
       status: "UNSAFE",
       reason: "Model returned unreadable output"
     });
-  } catch (error: any) {
-    console.error("MOD ERROR:", error);
+  } catch (err) {
+    const errorMessage =
+      err instanceof Error ? err.message : "Unknown error";
+
+    console.error("MODERATION ERROR:", errorMessage);
+
     return NextResponse.json(
-      { error: "Moderation failed", detail: error.message },
+      { error: "Moderation failed", detail: errorMessage },
       { status: 500 }
     );
   }
