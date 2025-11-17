@@ -38,10 +38,6 @@ export default function LandingPage() {
     "info"
   );
 
-  const defaultPlaceholder = `. Gold market and Impact
-. Cease fire between Israel and Hamas
-. Human jobs that AI may eliminate`;
-
   const fetchEntries = async (token: string) => {
     try {
       const res = await fetch("/api/entries", {
@@ -99,9 +95,9 @@ export default function LandingPage() {
     }
   }, [router]);
 
-  const handleOpenGoogle = () => {
-    setIsGoogleModalOpen(true);
-  };
+  // const handleOpenGoogle = () => {
+  //   setIsGoogleModalOpen(true);
+  // };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +108,7 @@ export default function LandingPage() {
     }
 
     // Convert textarea into array
-    let arrayContent = content
+    const  arrayContent = content
       .split("\n")
       .map((line) => line.replace(/^- /, "").trim())
       .filter((line) => line.length > 0);
@@ -130,7 +126,7 @@ export default function LandingPage() {
 
     setSubmitting(true); // show loading overlay
 
-    for (let topic of arrayContent) {
+    for (const topic of arrayContent) {
       const res = await fetch("/api/moderate-topic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -198,7 +194,7 @@ export default function LandingPage() {
             <textarea
               value={content}
               onChange={(e) => {
-                let value = e.target.value;
+                const value = e.target.value;
 
                 let lines = value.split("\n");
 
