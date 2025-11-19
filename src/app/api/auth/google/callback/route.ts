@@ -174,7 +174,7 @@ export async function GET(req: NextRequest) {
   };
 
   const sessionB64 = Buffer.from(JSON.stringify(sessionObj)).toString("base64");
-  const redirectTo = siteUrl; // go directly to profile; landing will also work
+  const redirectTo = `${siteUrl}/interest`; // go directly to profile; landing will also work
 
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Signing you in…</title></head>
