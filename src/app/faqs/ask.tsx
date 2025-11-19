@@ -2,7 +2,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
+import GoogleSignInModal from "@/app/landing/googleButton";
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
   const parts = jwt.split(".");
@@ -27,63 +27,60 @@ export default function AskSection() {
   const [status, setStatus] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("session");
-      if (!raw) {
-        router.replace("/landing");
-        return;
-      }
-      const session = JSON.parse(raw) as { id_token?: string };
-      if (!session?.id_token) {
-        router.replace("/landing");
-        return;
-      }
-      setIdToken(session.id_token);
-      const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
-      setUserEmail(claims?.email ?? null);
-    } catch (e) {
-      console.error("Failed to read session", e);
-      router.replace("/landing");
-    }
-  }, [router]);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!idToken) {
-      setStatus("Not authenticated");
-      return;
+  e.preventDefault();
+
+  const raw = localStorage.getItem("session");
+  if (!raw) {
+    setIsGoogleModalOpen(true);
+    return;
+  }
+
+  const session = JSON.parse(raw) as { id_token?: string };
+  const token = session?.id_token;
+
+  if (!token) {
+    setIsGoogleModalOpen(true);
+    return;
+  }
+
+  const claims = decodeJwtPayload<{ email?: string }>(token);
+  setUserEmail(claims?.email ?? null);
+
+  if (!content.trim()) {
+    setStatus("Please enter something to submit.");
+    return;
+  }
+
+  setSubmitting(true);
+  setStatus(null);
+
+  try {
+    const res = await fetch("/api/questions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ content }),
+    });
+
+    const json = await res.json();
+    if (!res.ok || !json.ok) {
+      setStatus(json.error || "Failed to submit");
+    } else {
+      setStatus("Submitted successfully!");
+      setContent("");
     }
-    if (!content.trim()) {
-      setStatus("Please enter something to submit.");
-      return;
-    }
-    setSubmitting(true);
-    setStatus(null);
-    try {
-      const res = await fetch("/api/questions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ content }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        setStatus(json.error || "Failed to submit");
-      } else {
-        setStatus("Submitted successfully!");
-        setContent("");
-      }
-    } catch (e: unknown) {
-      setStatus("Network error");
-      // setStatus(e?.message || "Network error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  } catch (e) {
+    setStatus("Network error");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   return (
     <div className=" space-y-[40px]">
@@ -117,6 +114,10 @@ export default function AskSection() {
           </form>
         </div>
       </div>
+      <GoogleSignInModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+      />
     </div>
   );
 }
