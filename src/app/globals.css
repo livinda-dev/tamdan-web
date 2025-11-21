@@ -59,3 +59,8 @@ body {
 .font-tamdan-bold {
   font: 24px TamdanBold;
 }
+
+.loader {
+  border-radius: 50%;
+}
+

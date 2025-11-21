@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import GoogleSignInModal from "./googleButton";
-import GenerateAgentButton from "./generateAgentButton";
+import GoogleSignInModal from "@/app/landing/googleButton";
+import GenerateAgentButton from "@/app/landing/GenerateAgentButton";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/alert";
 
@@ -23,7 +23,7 @@ function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   }
 }
 
-export default function LandingPage() {
+export default function InterestPage() {
   const router = useRouter();
   const [idToken, setIdToken] = useState<string | null>(null);
   const [content, setContent] = useState("");
@@ -77,13 +77,18 @@ export default function LandingPage() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem("session");
-      if (raw) {
-        const session = JSON.parse(raw) as { id_token?: string };
-        if (session?.id_token) {
-          router.replace("/interest");
-          return;
-        }
+      if (!raw) {
+        router.replace("/");
+        return;
       }
+      const session = JSON.parse(raw) as { id_token?: string };
+      if (!session?.id_token) {
+        setIsGoogleModalOpen(true);
+        return;
+      }
+      setIdToken(session.id_token);
+      const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
+      setUserEmail(claims?.email ?? null);
     } catch (e) {
       console.error("Failed to read session", e);
       setIsGoogleModalOpen(true);
@@ -170,16 +175,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center">
-      {/* Title */}
-      <p className="text-color tracking-widest text-center text-[36px] font-[TamdanRegular]">
-        Discover smarter searching with{" "}
-        <span className="font-bold primary-color text-[30px]">TAMDAN</span>
-      </p>
-      {/* Subtitle */}
-      <p className="text-color tracking-widest mb-10 text-center text-[36px] font-[TamdanRegular]">
-        an AI-powered agent that understands you better every time.
-      </p>
-
       <div className="w-[744px]">
         <p className="text-[16px] text-color mb-6 text-center ">
           _____Write your interests here_____
@@ -252,72 +247,6 @@ export default function LandingPage() {
           ““Find Better. Faster. With TAMDAN.””
         </p>
       </div>
-
-      <div className="w-full bg-[#EFF0EC] px-[117px] py-[44px]">
-        <div>
-          <p className="text-[18px] leading-relaxed font-normal text-[#1A1A1A]">
-            <span className="float-left text-[56px] font-[TamdanBold] leading-[0.8] mr-3 mt-1">
-              T
-            </span>
-            AMDAN is an intelligent, AI-powered search companion designed to
-            keep you informed and connected. Powered by advanced technologies
-            like GPT-5 and n8n automation, TAMDAN goes beyond ordinary search —
-            it gathers real-time news, analyzes trusted sources, and delivers
-            personalized insights that matter to you.
-          </p>
-        </div>
-        <div className="mt-[44px]">
-          <p>
-            Stay ahead effortlessly with instant alerts through Telegram chatbot
-            notifications or in-app messages whenever new updates match your
-            interests.
-          </p>
-        </div>
-        <div className="flex justify-around mt-[44px]">
-          <div
-            className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px]"
-            onClick={() => {
-              if (!userEmail) {
-                alert("Please sign in first.");
-                return;
-              }
-
-              const emailParam = encodeURIComponent(userEmail);
-
-              // Mobile & some desktop clients will auto-send `/start email`
-              window.location.href = `https://t.me/tamdanNewsBot?start=${emailParam}`;
-            }}
-          >
-            <img
-              src="/image/telegram.png"
-              alt="Telegram"
-              className="h-auto w-auto"
-            />
-            <p className="text-[24px]">TELEGRAM CHATBOT</p>
-          </div>
-
-          <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
-            <img src="/image/gmail.png" alt="Gmail" className="h-auto w-auto" />
-            <p className="text-[24px]">ALERT BY GMAIL</p>
-          </div>
-          <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
-            <img src="/image/sms.png" alt="SMS" className="h-auto w-auto" />
-            <p className="text-[24px]">SMS MESSAGE APP</p>
-          </div>
-        </div>
-        <div className="mt-[44px]">
-          <p>
-            Whether it’s daily news, research insights, or topic-specific
-            trends, TAMDAN ensures you never miss what’s important — your
-            intelligent search partner, powered by AI.
-          </p>
-        </div>
-      </div>
-
-      <GoogleSignInModal
-        isOpen={isGoogleModalOpen}
-        onClose={() => setIsGoogleModalOpen(false)}
-      />
       <Alert
         text={alertText}
         status={alertStatus}
