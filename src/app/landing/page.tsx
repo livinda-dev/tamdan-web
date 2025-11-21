@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import GoogleSignInModal from "./googleButton";
-import GenerateAgentButton from "./GenerateAgentButton";
+import GenerateAgentButton from "./generateAgentButton";
 import { useRouter } from "next/navigation";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
