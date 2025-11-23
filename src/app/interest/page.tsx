@@ -68,9 +68,28 @@ export default function InterestPage() {
     }
   };
 
+  const fetchNews  = async (token: string) => {
+    try {
+      const res = await fetch("/api/news", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const json = await res.json();
+      if (json.ok) {
+        console.log("Fetched news:", json);
+      } else {
+        console.error("Failed to fetch news:", json.error);
+      }
+    } catch (e) {
+      console.error("Failed to fetch news", e);
+    }
+  }
+
   useEffect(() => {
     if (idToken) {
       fetchEntries(idToken);
+      fetchNews(idToken);
     }
   }, [idToken]);
 
