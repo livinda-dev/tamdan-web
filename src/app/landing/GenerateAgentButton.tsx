@@ -14,7 +14,7 @@ const GenerateAgentButton: React.FC<GenerateAgentButtonProps> = ({ submitting, o
             <button
                 type="submit"
                 disabled={submitting}
-                className="w-full md:w-[180px] text-[16px] h-[39px] bg-primary-color text-white px-2 py-2 rounded-md hover:bg-primary-color disabled:opacity-60"
+                className="w-full md:w-[180px] text-[16px] h-[39px] bg-primary-color text-white px-2 pb-0.5 hover:bg-primary-color disabled:opacity-60"
                 onClick={onSubmit}
             >
                 {submitting ? "Submitting..." : "Generate your agent"}
