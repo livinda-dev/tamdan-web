@@ -64,13 +64,13 @@ export default function ExplorePage() {
                   rows={5}
                   placeholder={defaultPlaceholder}
                   
-                  className="w-full h-[320px] px-[35px] py-[30px] bg-white"
+                  className="w-full h-[320px] px-[35px] py-[30px] bg-white leading-8"
                 />
                 <div className="absolute bottom-4 right-4">
                   <button
                     type="submit"
                     disabled
-                    className="w-full md:w-[180px] text-[16px] h-[39px] bg-primary-color text-white px-2 py-2 rounded-md hover:bg-primary-color disabled:opacity-60"
+                    className="w-full md:w-[180px] text-[16px] h-[39px] bg-primary-color text-white px-2 py-2 hover:bg-primary-color disabled:opacity-60"
                   >
                     Generate your agent
                   </button>

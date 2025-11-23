@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import GoogleSignInModal from "@/app/landing/googleButton";
-import GenerateAgentButton from "@/app/landing/GenerateAgentButton";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/alert";
+import GenerateAgentButton from "../landing/generateAgentButton";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
@@ -108,7 +108,7 @@ export default function InterestPage() {
     }
 
     // Convert textarea into array
-    const  arrayContent = content
+    const arrayContent = content
       .split("\n")
       .map((line) => line.replace(/^- /, "").trim())
       .filter((line) => line.length > 0);
@@ -176,13 +176,15 @@ export default function InterestPage() {
   return (
     <div className="min-h-screen flex flex-col items-center">
       <div className="w-[744px]">
-        <p className="text-[16px] text-color mb-6 text-center ">
+        <p className="text-[14px] text-color pt-[40px] text-center ">
           _____Write your interests here_____
         </p>
         <form onSubmit={onSubmit}>
           <div className="relative">
             <textarea
               value={content}
+              maxLength={200}
+              className="w-full h-[320px] px-[35px] py-[30px] bg-white font-tamdan-placeholder leading-[2]"
               onChange={(e) => {
                 const value = e.target.value;
 
@@ -215,11 +217,14 @@ export default function InterestPage() {
                     // Allow blank lines normally
                     if (line.trim() === "") return "";
 
-                    // Remove ONLY one leading dash + optional space
-                    const withoutDash = line.replace(/^-\s?/, "");
+                    // Remove ONLY one leading bullet + optional space OR dash
+                    const withoutBullet = line.replace(/^[•\-]\s?/, "");
 
-                    // Final line must always start with "- "
-                    return `- ${withoutDash}`;
+                    // Limit each line to 50 characters
+                    const limited = withoutBullet.slice(0, 50);
+
+                    // Final line must always start with "• "
+                    return `• ${limited}`;
                   })
                   .join("\n");
 
@@ -229,12 +234,10 @@ export default function InterestPage() {
               placeholder={
                 savedContent
                   ? ""
-                  : `- Gold market and Impact
-- Cease fire between Israel and Hamas
-- Human jobs that AI may eliminate`
+                  : `• Gold market and Impact
+• Cease fire between Israel and Hamas
+• Human jobs that AI may eliminate`
               }
-              maxLength={200}
-              className="w-full h-[320px] px-[35px] py-[30px] bg-white"
             />
 
             <GenerateAgentButton submitting={submitting} onSubmit={onSubmit} />
@@ -243,7 +246,7 @@ export default function InterestPage() {
         <div className="flex justify-center mt-2">
           {status && <span className="text-sm text-gray-700">{status}</span>}
         </div>
-        <p className="text-[16px] text-color mb-6 text-center">
+        <p className="text-[14px] text-color text-center">
           ““Find Better. Faster. With TAMDAN.””
         </p>
       </div>

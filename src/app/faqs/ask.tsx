@@ -105,7 +105,7 @@ export default function AskSection() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full md:w-[180px] cursor-pointer text-[16px] h-[39px] bg-primary-color text-white px-2 py-2 rounded-md hover:bg-primary-color disabled:opacity-60"
+                  className="w-full md:w-[180px] cursor-pointer text-[16px] h-[39px] bg-primary-color text-white px-2 py-2 hover:bg-primary-color disabled:opacity-60"
                 >
                   {submitting ? "Submitting..." : "Submit"}
                 </button>

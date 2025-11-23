@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import GoogleSignInModal from "./googleButton";
 import GenerateAgentButton from "./generateAgentButton";
 import { useRouter } from "next/navigation";
@@ -25,6 +25,7 @@ function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
 
 export default function LandingPage() {
   const router = useRouter();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [idToken, setIdToken] = useState<string | null>(null);
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<string | null>(null);
@@ -37,6 +38,8 @@ export default function LandingPage() {
   const [alertStatus, setAlertStatus] = useState<"error" | "success" | "info">(
     "info"
   );
+  const [charLimitWarning, setCharLimitWarning] = useState(false);
+  const [topicLimitWarning, setTopicLimitWarning] = useState(false);
 
   const fetchEntries = async (token: string) => {
     try {
@@ -52,7 +55,7 @@ export default function LandingPage() {
         if (dbContent) {
           const withDashes = dbContent
             .split(",")
-            .map((t: string) => `- ${t.trim()}`)
+            .map((t: string) => `• ${t.trim()}`)
             .join("\n");
 
           setContent(withDashes);
@@ -90,10 +93,6 @@ export default function LandingPage() {
     }
   }, [router]);
 
-  // const handleOpenGoogle = () => {
-  //   setIsGoogleModalOpen(true);
-  // };
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -103,9 +102,9 @@ export default function LandingPage() {
     }
 
     // Convert textarea into array
-    const  arrayContent = content
+    const arrayContent = content
       .split("\n")
-      .map((line) => line.replace(/^- /, "").trim())
+      .map((line) => line.replace(/^[•\-]\s?/, "").trim())
       .filter((line) => line.length > 0);
 
     // ❌ Block if more than 5 topics
@@ -171,12 +170,12 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col items-center">
       {/* Title */}
-      <p className="text-color tracking-widest text-center text-[36px] font-[TamdanRegular]">
+      <p className="text-color text-center text-[36px] font-[TamdanRegular]">
         Discover smarter searching with{" "}
         <span className="font-bold primary-color text-[30px]">TAMDAN</span>
       </p>
       {/* Subtitle */}
-      <p className="text-color tracking-widest mb-10 text-center text-[36px] font-[TamdanRegular]">
+      <p className="text-color mb-10 text-center text-[36px] font-[TamdanRegular]">
         an AI-powered agent that understands you better every time.
       </p>
 
@@ -187,7 +186,9 @@ export default function LandingPage() {
         <form onSubmit={onSubmit}>
           <div className="relative">
             <textarea
+              ref={textareaRef}
               value={content}
+              className="w-full h-[320px] px-[35px] py-[30px] pb-[80px] bg-white font-tamdan-placeholder leading-[2] overflow-y-auto"
               onChange={(e) => {
                 const value = e.target.value;
 
@@ -198,49 +199,65 @@ export default function LandingPage() {
                   (l) => l.trim() !== ""
                 ).length;
 
+                // If already at 5 topics, prevent adding more non-empty lines
                 if (nonEmptyCount > 5) {
-                  setAlertText("You can only submit up to 5 topics.");
-                  setAlertStatus("error");
-                  setIsAlertOpen(true);
-
-                  // keep only first 5 non-empty lines, but allow blank lines
-                  let count = 0;
-                  lines = lines.filter((line) => {
-                    if (line.trim() === "") return true;
-                    if (count < 5) {
-                      count++;
-                      return true;
-                    }
-                    return false;
-                  });
+                  setTopicLimitWarning(true);
+                  // Block the new input - keep previous content
+                  return;
+                } else {
+                  setTopicLimitWarning(false);
                 }
 
+                let hitLimit = false;
                 const formatted = lines
                   .map((line) => {
                     // Allow blank lines normally
                     if (line.trim() === "") return "";
 
-                    // Remove ONLY one leading dash + optional space
-                    const withoutDash = line.replace(/^-\s?/, "");
+                    // Remove ONLY one leading bullet + optional space OR dash
+                    const withoutBullet = line.replace(/^[•\-]\s?/, "");
 
-                    // Final line must always start with "- "
-                    return `- ${withoutDash}`;
+                    // Limit each line to 80 characters
+                    const limited = withoutBullet.slice(0, 80);
+
+                    // Check if limit was reached
+                    if (withoutBullet.length > 80) {
+                      hitLimit = true;
+                    }
+
+                    // Final line must always start with "• "
+                    return `•${limited}`;
                   })
                   .join("\n");
 
+                setCharLimitWarning(hitLimit);
                 setContent(formatted);
+
+                // Auto-scroll to bottom after content update
+                setTimeout(() => {
+                  if (textareaRef.current) {
+                    textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+                  }
+                }, 0);
               }}
               rows={5}
               placeholder={
                 savedContent
                   ? ""
-                  : `- Gold market and Impact
-- Cease fire between Israel and Hamas
-- Human jobs that AI may eliminate`
+                  : `• Gold market and Impact
+• Cease fire between Israel and Hamas
+• Human jobs that AI may eliminate`
               }
-              maxLength={200}
-              className="w-full h-[320px] px-[35px] py-[30px] bg-white"
             />
+
+            {(charLimitWarning || topicLimitWarning) && (
+              <div className="absolute top-2 right-2 text-red-800 px-3 py-1 text-sm">
+                {topicLimitWarning && "⚠ You can only submit up to 5 topics"}
+                {!topicLimitWarning &&
+                  charLimitWarning &&
+                  "⚠ A line limit reached (80 characters)"}
+              </div>
+            )}
 
             <GenerateAgentButton submitting={submitting} onSubmit={onSubmit} />
           </div>
@@ -248,12 +265,12 @@ export default function LandingPage() {
         <div className="flex justify-center mt-2">
           {status && <span className="text-sm text-gray-700">{status}</span>}
         </div>
-        <p className="text-[16px] text-color mb-6 text-center">
-          ““Find Better. Faster. With TAMDAN.””
+        <p className="text-[16px] text-color mb-6 text-center font-[TamdanAddition]">
+          ""Find Better. Faster. With TAMDAN.""
         </p>
       </div>
 
-      <div className="w-full bg-[#EFF0EC] px-[117px] py-[44px]">
+      <div className="w-full bg-[#EFF0EC] px-[117px] py-[44px] mt-[60px]">
         <div>
           <p className="text-[18px] leading-relaxed font-normal text-[#1A1A1A]">
             <span className="float-left text-[56px] font-[TamdanBold] leading-[0.8] mr-3 mt-1">
@@ -307,8 +324,8 @@ export default function LandingPage() {
         </div>
         <div className="mt-[44px]">
           <p>
-            Whether it’s daily news, research insights, or topic-specific
-            trends, TAMDAN ensures you never miss what’s important — your
+            Whether it's daily news, research insights, or topic-specific
+            trends, TAMDAN ensures you never miss what's important — your
             intelligent search partner, powered by AI.
           </p>
         </div>

@@ -79,7 +79,7 @@ export default function NavBar() {
   }, [dropdownRef]);
 
   const linkClass = (path: string) =>
-    `px-3 py-2 rounded-md text-sm font-medium ${
+    `px-3 py-2 text-sm font-medium ${
       pathname === path ? " underline text-color" : "text-color"
     }`;
 
@@ -92,7 +92,7 @@ export default function NavBar() {
               <img
                 src="/image/LogoTamdan.png"
                 alt="Logo"
-                className="h-auto w-auto"
+                className="h-8 w-auto"
               />
             </div>
           </div>
@@ -122,12 +122,18 @@ export default function NavBar() {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center justify-center"
                 >
-                  <p className=" text-black cursor-pointer">PROFILE</p>
+                  <p className=" text-black cursor-pointer font-bold">PROFILE</p>
                 </button>
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                    <div className="px-4 py-2">
-                      <p className="text-sm text-gray-700">{userName}</p>
+                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg py-1 z-10">
+                    <div 
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        router.push("/profile");
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      <p className="text-sm text-gray-700 font-medium">{userName}</p>
                       <p className="text-sm text-gray-500 truncate">
                         {userEmail}
                       </p>
@@ -152,7 +158,7 @@ export default function NavBar() {
                     <div className="border-t border-gray-100"></div>
                     <button
                       onClick={logout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-500 cursor-pointer"
                     >
                       Logout
                     </button>
@@ -163,13 +169,13 @@ export default function NavBar() {
               <div>
                 <button
                   onClick={handleOpenGoogle}
-                  className="bg-primary-color text-white px-3 py-2 rounded-md text-sm cursor-pointer"
+                  className="bg-primary-color text-white px-3 py-2 text-sm cursor-pointer"
                 >
                   SIGN UP
                 </button>
                 <button
                   onClick={handleOpenGoogle}
-                  className="text-color px-3 py-2 rounded-md text-sm font-bold cursor-pointer"
+                  className="text-color px-3 py-2 text-sm font-bold cursor-pointer"
                 >
                   LOGIN
                 </button>
