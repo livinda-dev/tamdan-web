@@ -45,22 +45,58 @@ export default function NavBar() {
   };
 
   useEffect(() => {
-    const session = localStorage.getItem("session");
-    if (session) {
-      setIsLoggedIn(true);
-      try {
-        const parsedSession = JSON.parse(session) as { id_token?: string };
-        const claims = decodeJwtPayload<{ email?: string; name?: string }>(
-          parsedSession.id_token
-        );
-        setUserEmail(claims?.email ?? null);
-        setUserName(claims?.name ?? null);
-      } catch (e) {
-        console.error("Failed to parse session", e);
+    async function loadUser() {
+      const sessionRaw = localStorage.getItem("session");
+      if (!sessionRaw) {
+        setIsLoggedIn(false);
+        setUserEmail(null);
+        setUserName(null);
+        return;
       }
-    } else {
-      setIsLoggedIn(false);
+
+      setIsLoggedIn(true);
+
+      try {
+        const parsed = JSON.parse(sessionRaw) as { id_token?: string };
+        const idToken = parsed.id_token;
+        if (!idToken) {
+          setIsLoggedIn(false);
+          return;
+        }
+
+        // Try fetching profile from server (uses same Authorization check as /profile page)
+        const res = await fetch("/api/profile", {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        const json = await res.json();
+
+        if (json?.ok && json.user) {
+          setUserEmail(json.user.email ?? null);
+          // prefer username from DB; fall back to name claim
+          const nameFromJwt = decodeJwtPayload<{ name?: string }>(idToken)?.name ?? null;
+          setUserName(json.user.username ?? nameFromJwt);
+        } else {
+          // fallback to token decode for basic display
+          const claims = decodeJwtPayload<{ email?: string; name?: string }>(idToken);
+          setUserEmail(claims?.email ?? null);
+          setUserName(claims?.name ?? null);
+        }
+      } catch (err) {
+        console.error("NavBar loadUser failed", err);
+        try {
+          const parsed = JSON.parse(localStorage.getItem("session") || "{}") as {
+            id_token?: string;
+          };
+          const claims = decodeJwtPayload<{ email?: string; name?: string }>(
+            parsed.id_token
+          );
+          setUserEmail(claims?.email ?? null);
+          setUserName(claims?.name ?? null);
+        } catch {}
+      }
     }
+
+    loadUser();
   }, [pathname]);
 
   useEffect(() => {

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import GoogleSignInModal from "@/app/landing/googleButton";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/alert";
-import GenerateAgentButton from "../landing/generateAgentButton";
+import GenerateAgentButton from "../../components/GenerateAgentButton";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
@@ -52,7 +52,7 @@ export default function InterestPage() {
         if (dbContent) {
           const withDashes = dbContent
             .split(",")
-            .map((t: string) => `- ${t.trim()}`)
+            .map((t: string) => `• ${t.trim()}`)
             .join("\n");
 
           setContent(withDashes);
@@ -129,7 +129,7 @@ export default function InterestPage() {
     // Convert textarea into array
     const arrayContent = content
       .split("\n")
-      .map((line) => line.replace(/^- /, "").trim())
+      .map((line) => line.replace(/^. /, "").trim())
       .filter((line) => line.length > 0);
 
     // ❌ Block if more than 5 topics

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import GoogleSignInModal from "./googleButton";
-import GenerateAgentButton from "./generateAgentButton";
+import GenerateAgentButton from "../../components/GenerateAgentButton";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/alert";
 
@@ -192,7 +192,7 @@ export default function LandingPage() {
               onChange={(e) => {
                 const value = e.target.value;
 
-                let lines = value.split("\n");
+                const lines = value.split("\n");
 
                 // Count only non-empty lines (ignore blank lines)
                 const nonEmptyCount = lines.filter(
@@ -266,7 +266,7 @@ export default function LandingPage() {
           {status && <span className="text-sm text-gray-700">{status}</span>}
         </div>
         <p className="text-[16px] text-color mb-6 text-center font-[TamdanAddition]">
-          ""Find Better. Faster. With TAMDAN.""
+          &quot;&quot;Find Better. Faster. With TAMDAN.&quot;&quot;
         </p>
       </div>
 
@@ -324,8 +324,8 @@ export default function LandingPage() {
         </div>
         <div className="mt-[44px]">
           <p>
-            Whether it's daily news, research insights, or topic-specific
-            trends, TAMDAN ensures you never miss what's important — your
+            Whether it&apos;s daily news, research insights, or topic-specific
+            trends, TAMDAN ensures you never miss what&apos;s important — your
             intelligent search partner, powered by AI.
           </p>
         </div>
