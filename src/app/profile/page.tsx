@@ -12,29 +12,9 @@ interface UserRow {
   created_at?: string;
 }
 
-interface GoogleClaims {
-  email?: string;
-  sub?: string;
-  name?: string;
-}
 
-// Helper to decode JWT
-function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
-  if (!jwt) return null;
-  const parts = jwt.split(".");
-  if (parts.length < 2) return null;
-  const payloadB64 = parts[1]
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
-  try {
-    const padded = payloadB64 + "===".slice((payloadB64.length + 3) % 4);
-    // For client-side, use TextEncoder/atob instead of Buffer
-    const json = atob(padded);
-    return JSON.parse(json) as T;
-  } catch {
-    return null;
-  }
-}
+
+
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -109,12 +89,16 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen background-color flex items-center justify-center">
-        <div className="text-center">
-          <div className="loader border-4 border-gray-300 border-t-blue-500 rounded-full w-12 h-12 mx-auto animate-spin"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
-        </div>
-      </main>
+      <div className="min-h-screen flex flex-col items-center justify-center">
+            <div className="flex gap-2">
+              <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce"></div>
+              <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.2s]"></div>
+              <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.4s]"></div>
+            </div>
+            <p className="mt-4 text-gray-600 font-medium">
+              Loading your daily insights...
+            </p>
+          </div>
     );
   }
 
@@ -217,7 +201,7 @@ export default function ProfilePage() {
               Change Email
             </h3>
             <p className="text-gray-600 text-sm mb-6">
-              To change your email, you need to log in via Google again. We will verify that the new email doesn't already exist in our system before updating your account.
+              To change your email, you need to log in via Google again. We will verify that the new email doesn&apos;t already exist in our system before updating your account.
             </p>
 
             <div className="flex gap-3">

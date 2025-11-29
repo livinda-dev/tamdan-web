@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Public paths that do not require authentication
-const PUBLIC_PATHS = new Set<string>([
-  "/", // landing
-  "/landing", // explicit landing route
-]);
+
 
 function isStaticAsset(pathname: string) {
   return (

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
-import GoogleSignInModal from "@/app/landing/googleButton";
+import GoogleSignInModal from "@/components/googleButton";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
@@ -39,6 +39,8 @@ export default function NavBar() {
   const logout = () => {
     try {
       localStorage.removeItem("session");
+      localStorage.removeItem("currentEmail");
+      localStorage.removeItem("currentIdToken");
     } catch {}
     setIsLoggedIn(false);
     router.replace("/");
@@ -134,15 +136,9 @@ export default function NavBar() {
           </div>
           <div>
             <div className="ml-10 flex items-baseline space-x-4">
-              {isLoggedIn ? (
-                <Link href="/interest" className={linkClass("/interest")}>
+              <Link href="/interest" className={linkClass("/interest")}>
                   INTERESTS
                 </Link>
-              ) : (
-                <Link href="/" className={linkClass("/")}>
-                  INTERESTS
-                </Link>
-              )}
               <Link href="/explore" className={linkClass("/explore")}>
                 EXPLORES
               </Link>

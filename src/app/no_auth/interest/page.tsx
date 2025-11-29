@@ -1,0 +1,220 @@
+"use client";
+
+import React, { useEffect, useState, useRef } from "react";
+import GoogleSignInModal from "@/components/googleButton";
+import GenerateAgentButton from "@/components/GenerateAgentButton";
+import { useRouter } from "next/navigation";
+import Alert from "@/components/alert";
+
+export default function NoAuthLandingPage() {
+  const router = useRouter();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [idToken, setIdToken] = useState<string | null>(null);
+  const [content, setContent] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [savedContent, setSavedContent] = useState<string | null>(null);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [isALertOpen, setIsAlertOpen] = useState(false);
+  const [alertText, setAlertText] = useState("");
+  const [alertStatus, setAlertStatus] = useState<"error" | "success" | "info">(
+    "info"
+  );
+  const [charLimitWarning, setCharLimitWarning] = useState(false);
+  const [topicLimitWarning, setTopicLimitWarning] = useState(false);
+
+  
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+      setIsGoogleModalOpen(true);
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center">
+      {/* Title */}
+      <p className="text-color text-center text-[36px] font-[TamdanRegular]">
+        Discover smarter searching with{" "}
+        <span className="font-bold primary-color text-[30px]">TAMDAN</span>
+      </p>
+      {/* Subtitle */}
+      <p className="text-color mb-10 text-center text-[36px] font-[TamdanRegular]">
+        an AI-powered agent that understands you better every time.
+      </p>
+
+      <div className="w-[744px]">
+        <p className="text-[16px] text-color mb-6 text-center ">
+          _____Write your interests here_____
+        </p>
+        <form onSubmit={onSubmit}>
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              className="w-full h-[320px] px-[35px] py-[30px] pb-[80px] bg-white font-tamdan-placeholder leading-[2] overflow-y-auto"
+              onChange={(e) => {
+                const value = e.target.value;
+
+                const lines = value.split("\n");
+
+                // Count only non-empty lines (ignore blank lines)
+                const nonEmptyCount = lines.filter(
+                  (l) => l.trim() !== ""
+                ).length;
+
+                // If already at 5 topics, prevent adding more non-empty lines
+                if (nonEmptyCount > 5) {
+                  setTopicLimitWarning(true);
+                  // Block the new input - keep previous content
+                  return;
+                } else {
+                  setTopicLimitWarning(false);
+                }
+
+                let hitLimit = false;
+                const formatted = lines
+                  .map((line) => {
+                    // Allow blank lines normally
+                    if (line.trim() === "") return "";
+
+                    // Remove ONLY one leading bullet + optional space OR dash
+                    const withoutBullet = line.replace(/^[•\-]\s?/, "");
+
+                    // Limit each line to 80 characters
+                    const limited = withoutBullet.slice(0, 80);
+
+                    // Check if limit was reached
+                    if (withoutBullet.length > 80) {
+                      hitLimit = true;
+                    }
+
+                    // Final line must always start with "• "
+                    return `•${limited}`;
+                  })
+                  .join("\n");
+
+                setCharLimitWarning(hitLimit);
+                setContent(formatted);
+
+                // Auto-scroll to bottom after content update
+                setTimeout(() => {
+                  if (textareaRef.current) {
+                    textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+                  }
+                }, 0);
+              }}
+              rows={5}
+              placeholder={
+                savedContent
+                  ? ""
+                  : `• Gold market and Impact
+• Cease fire between Israel and Hamas
+• Human jobs that AI may eliminate`
+              }
+            />
+
+            {(charLimitWarning || topicLimitWarning) && (
+              <div className="absolute top-2 right-2 text-red-800 px-3 py-1 text-sm">
+                {topicLimitWarning && "⚠ You can only submit up to 5 topics"}
+                {!topicLimitWarning &&
+                  charLimitWarning &&
+                  "⚠ A line limit reached (80 characters)"}
+              </div>
+            )}
+
+            <GenerateAgentButton submitting={submitting} onSubmit={onSubmit} />
+          </div>
+        </form>
+        <div className="flex justify-center mt-2">
+          {status && <span className="text-sm text-gray-700">{status}</span>}
+        </div>
+        <p className="text-[16px] text-color mb-6 text-center font-[TamdanAddition]">
+          &quot;&quot;Find Better. Faster. With TAMDAN.&quot;&quot;
+        </p>
+      </div>
+
+      <div className="w-full bg-[#EFF0EC] px-[117px] py-[44px] mt-[60px]">
+        <div>
+          <p className="text-[18px] leading-relaxed font-normal text-[#1A1A1A]">
+            <span className="float-left text-[56px] font-[TamdanBold] leading-[0.8] mr-3 mt-1">
+              T
+            </span>
+            AMDAN is an intelligent, AI-powered search companion designed to
+            keep you informed and connected. Powered by advanced technologies
+            like GPT-5 and n8n automation, TAMDAN goes beyond ordinary search —
+            it gathers real-time news, analyzes trusted sources, and delivers
+            personalized insights that matter to you.
+          </p>
+        </div>
+        <div className="mt-[44px]">
+          <p>
+            Stay ahead effortlessly with instant alerts through Telegram chatbot
+            notifications or in-app messages whenever new updates match your
+            interests.
+          </p>
+        </div>
+        <div className="flex justify-around mt-[44px]">
+          <div
+            className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px]"
+            onClick={() => {
+              if (!userEmail) {
+                alert("Please sign in first.");
+                return;
+              }
+
+              const emailParam = encodeURIComponent(userEmail);
+
+              // Mobile & some desktop clients will auto-send `/start email`
+              window.location.href = `https://t.me/tamdanNewsBot?start=${emailParam}`;
+            }}
+          >
+            <img
+              src="/image/telegram.png"
+              alt="Telegram"
+              className="h-auto w-auto"
+            />
+            <p className="text-[24px]">TELEGRAM CHATBOT</p>
+          </div>
+
+          <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
+            <img src="/image/gmail.png" alt="Gmail" className="h-auto w-auto" />
+            <p className="text-[24px]">ALERT BY GMAIL</p>
+          </div>
+          <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
+            <img src="/image/sms.png" alt="SMS" className="h-auto w-auto" />
+            <p className="text-[24px]">SMS MESSAGE APP</p>
+          </div>
+        </div>
+        <div className="mt-[44px]">
+          <p>
+            Whether it&apos;s daily news, research insights, or topic-specific
+            trends, TAMDAN ensures you never miss what&apos;s important — your
+            intelligent search partner, powered by AI.
+          </p>
+        </div>
+      </div>
+
+      <GoogleSignInModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+      />
+      <Alert
+        text={alertText}
+        status={alertStatus}
+        isOpen={isALertOpen}
+        onClose={() => setIsAlertOpen(false)}
+      />
+      {submitting && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+          <div className="bg-white px-8 py-6 rounded-xl shadow-lg text-center">
+            <div className="loader border-4 border-gray-300 border-t-blue-500 rounded-full w-12 h-12 mx-auto animate-spin"></div>
+            <p className="mt-4 text-gray-700 text-lg font-medium">
+              Checking your topics...
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -59,8 +59,8 @@ export async function GET(req: NextRequest) {
 
         const {data: newsRow, error: newsErr } = await supabase
             .from("user_newsletter")
-            .select("id, header,topics")
-            .filter("header->>recipient_id", "eq", userRow.id)
+            .select("id, header,topics,user_id")
+            .eq("user_id", userRow.id)
             .maybeSingle();
         if (newsErr) {
             console.error("[News API] lookup newsletters error:", newsErr.message);
