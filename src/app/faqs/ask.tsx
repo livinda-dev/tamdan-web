@@ -85,7 +85,7 @@ export default function AskSection() {
   return (
     <div className="space-y-6 sm:space-y-8 md:space-y-10">
       <div>
-        <p className="text-2xl sm:text-3xl md:text-4xl font-bold">Got something else you'd like to know?</p>
+        <p className="text-2xl sm:text-3xl md:text-4xl font-bold">Got something else you would like to know?</p>
       </div>
       <div>
         <p className="text-sm sm:text-base md:text-lg leading-relaxed">Just ask TAMDAN — your AI assistant is always ready to answer.</p>

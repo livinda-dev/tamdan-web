@@ -33,7 +33,7 @@ export default function NoAuthExplorePage() {
             explore the world of information effortlessly. Powered by GPT-5 and
             n8n automation, TAMDAN connects to reliable news sources, analyzes
             fresh updates, and delivers the information that truly matters to
-            you. Whether you're tracking breaking news, following specific
+            you. Whether you are tracking breaking news, following specific
             topics, or simply staying informed, TAMDAN ensures that everything
             you receive is relevant, timely, and personalized.
           </p>
@@ -88,7 +88,7 @@ export default function NoAuthExplorePage() {
               </div>
             </form>
             <p className="text-xs sm:text-sm md:text-base text-color mb-6 text-center mt-2 sm:mt-3">
-              ""Find Better. Faster. With TAMDAN.""
+              Find Better. Faster. With TAMDAN.
             </p>
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function NoAuthExplorePage() {
           <span className="font-bold">
             Step 2: Choose Your Notification Channel:
           </span>
-          Next, select how you'd like to receive your updates. TAMDAN supports
+          Next, select how you would like to receive your updates. TAMDAN supports
           Telegram chatbot and Gmail, giving you the flexibility to stay
           informed in your preferred way. Telegram offers quick, conversational
           alerts through the chatbot, while Gmail provides a clean and organized
@@ -123,7 +123,7 @@ export default function NoAuthExplorePage() {
           <span className="font-bold">Step 3: Set Your Alert Time:</span>
           Once your channel is selected, choose the time that best fits your
           schedule. TAMDAN sends your personalized updates every 24 hours,
-          ensuring you get the latest information at the moment that's most
+          ensuring you get the latest information at the moment that is most
           convenient for you. This way, you stay informed without being
           overwhelmed — the news comes to you, right when you want it.
         </p>
@@ -134,7 +134,7 @@ export default function NoAuthExplorePage() {
           After setup, TAMDAN continuously monitors sources, filters out
           unreliable content, and compiles the most relevant updates for you.
           With its AI-powered workflow, it saves you hours of manual searching
-          and delivers information that's insightful, trustworthy, and easy to
+          and delivers information that is insightful, trustworthy, and easy to
           digest.
         </p>
       </div>

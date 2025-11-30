@@ -130,7 +130,7 @@ export default function NoAuthLandingPage() {
             {status && <span className="text-xs sm:text-sm text-gray-700">{status}</span>}
           </div>
           <p className="text-xs sm:text-sm md:text-base text-color mb-6 text-center font-[TamdanAddition] mt-2 sm:mt-3">
-            ""Find Better. Faster. With TAMDAN.""
+            Find Better. Faster. With TAMDAN.
           </p>
         </div>
       </div>
@@ -186,8 +186,8 @@ export default function NoAuthLandingPage() {
           {/* Closing Text */}
           <div className="mt-6 sm:mt-8 md:mt-10">
             <p className="text-sm sm:text-base md:text-lg leading-relaxed">
-              Whether it's daily news, research insights, or topic-specific
-              trends, TAMDAN ensures you never miss what's important — your
+              Whether it is daily news, research insights, or topic-specific
+              trends, TAMDAN ensures you never miss what is important — your
               intelligent search partner, powered by AI.
             </p>
           </div>

@@ -60,7 +60,7 @@ export default function SampleNews({
         <h3 className="text-lg sm:text-xl font-bold font-serif mb-4">Market Highlights</h3>
         <div className="space-y-4 text-sm sm:text-base text-gray-800 leading-relaxed">
           <p>
-            Asian stocks rose today, led by South Korea's Kospi hitting record
+            Asian stocks rose today, led by South Korea is Kospi hitting record
             highs due to optimism in U.S.–China trade talks and strong AI-sector
             investment. U.S. stock futures also gained slightly ahead of key
             earnings from AMD and Palantir. However, investor confidence stayed
@@ -71,7 +71,7 @@ export default function SampleNews({
           </p>
           <p>
             Global stock markets showed mixed performance today. Asian shares
-            climbed, led by South Korea's Kospi reaching a record high, fueled
+            climbed, led by South Korea is Kospi reaching a record high, fueled
             by renewed optimism surrounding U.S.–China trade-talk progress and
             growth investment in the AI sector. In the U.S., stock futures for
             the S&P 500 and Nasdaq edged higher ahead of major tech earnings
@@ -103,7 +103,7 @@ export default function SampleNews({
           </p>
           <p>
             Meanwhile, global investors are closely monitoring monetary policy,
-            as the U.S. Federal Reserve's cautious tone on future rate cuts has
+            as the U.S. Federal Reserve is cautious tone on future rate cuts has
             strengthened the dollar and limited appetite for riskier assets.
             This stance signals that policymakers remain focused on controlling
             inflation rather than stimulating growth.
@@ -127,12 +127,12 @@ export default function SampleNews({
         <p className="text-sm sm:text-base text-gray-800 leading-relaxed">
           Global stock markets moved cautiously upward today, supported by gains
           in Asia and optimism renewed from U.S.–China trade talks. South
-          Korea's Kospi hit a record high, reflecting strong investor confidence
-          in the region's growing technology and AI industries. Meanwhile, U.S.
+          Korea is Kospi hit a record high, reflecting strong investor confidence
+          in the region is growing technology and AI industries. Meanwhile, U.S.
           stock futures for the S&P 500 and Nasdaq inched higher as investors
           looked ahead to earnings from tech giants AMD and Palantir. Despite
           positive momentum, market sentiment remains restrained amid
-          uncertainty about the Federal Reserve's policy outlook.
+          uncertainty about the Federal Reserve is policy outlook.
         </p>
       </section>
 

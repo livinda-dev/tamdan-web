@@ -199,7 +199,7 @@ export default function ProfilePage() {
               Change Email
             </h3>
             <p className="text-gray-600 text-xs sm:text-sm mb-6 leading-relaxed">
-              To change your email, you need to log in via Google again. We will verify that the new email doesn't already exist in our system before updating your account.
+              To change your email, you need to log in via Google again. We will verify that the new email does not already exist in our system before updating your account.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
