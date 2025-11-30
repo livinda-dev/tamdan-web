@@ -39,53 +39,53 @@ export default function AuthExplorePage({ newsHeader, newsTopics }: Props) {
   }
 
   return (
-    <div className="min-h-screen px-[96px]">
-      <div className="space-y-6">
+    <div className="min-h-screen px-4 sm:px-6 md:px-12 lg:px-[96px]">
+      <div className="space-y-6 sm:space-y-8 md:space-y-10">
 
         {/* Header */}
         <div>
-          <p className="text-gray-600">{newsHeader.delivery_date}</p>
-          <p className="mt-3 text-gray-800">{newsHeader.intro_paragraph}</p>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600">{newsHeader.delivery_date}</p>
+          <p className="mt-3 text-sm sm:text-base md:text-lg text-gray-800 leading-relaxed">{newsHeader.intro_paragraph}</p>
         </div>
 
         {/* Topics */}
         {newsTopics.map((topic, i) => (
-          <div key={i} className="border-t pt-4">
+          <div key={i} className="border-t pt-4 sm:pt-6">
             {/* Toggle */}
             <button
-              className="flex items-center gap-2 text-lg font-semibold w-full text-left"
+              className="flex items-center gap-2 text-base sm:text-lg font-semibold w-full text-left"
               onClick={() => toggle(i)}
             >
               <ChevronRightIcon
-                className={`h-5 transition-transform cursor-pointer ${
+                className={`h-5 w-5 transition-transform cursor-pointer flex-shrink-0 ${
                   openSections.includes(i) ? "rotate-90" : ""
                 }`}
               />
-              {topic.section_title}
+              <span className="break-words">{topic.section_title}</span>
             </button>
 
             {/* Content */}
             {openSections.includes(i) && (
               <div className="mt-4 space-y-6 pl-7">
 
-                <p className="text-gray-700">{topic.section_summary}</p>
+                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{topic.section_summary}</p>
 
                 {topic.articles.map((a, j) => (
                   <div
                     key={j}
-                    className=" p-4"
+                    className=" p-4 sm:p-5"
                   >
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-semibold text-sm sm:text-base text-gray-900">
                       {a.article_title}
                     </h3>
-                    <p className="mt-2 text-gray-700">{a.summary}</p>
-                    <p className="mt-2 text-sm text-blue-600">
+                    <p className="mt-2 text-xs sm:text-sm text-gray-700 leading-relaxed">{a.summary}</p>
+                    <p className="mt-2 text-xs sm:text-sm text-blue-600">
                       Source: {a.source_name}
                     </p>
                     <a
                       href={a.url}
                       target="_blank"
-                      className="text-sm mt-1 inline-block text-indigo-600 underline"
+                      className="text-xs sm:text-sm mt-2 inline-block text-indigo-600 underline"
                     >
                       Read Full Article →
                     </a>

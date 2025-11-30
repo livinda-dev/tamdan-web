@@ -113,10 +113,6 @@ export default function AuthInterestPage() {
     }
   }, [router]);
 
-  // const handleOpenGoogle = () => {
-  //   setIsGoogleModalOpen(true);
-  // };
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -192,17 +188,17 @@ export default function AuthInterestPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center">
-      <div className="w-[744px]">
-        <p className="text-[14px] text-color pt-[40px] text-center ">
+    <div className="min-h-screen flex flex-col items-center px-4 sm:px-6">
+      <div className="w-full max-w-2xl">
+        <p className="text-xs sm:text-sm md:text-base text-color pt-6 sm:pt-8 md:pt-10 text-center">
           _____Write your interests here_____
         </p>
         <form onSubmit={onSubmit}>
-          <div className="relative">
+          <div className="relative mt-4 sm:mt-6 md:mt-8">
             <textarea
               value={content}
               maxLength={200}
-              className="w-full h-[320px] px-[35px] py-[30px] bg-white font-tamdan-placeholder leading-[2]"
+              className="w-full h-64 sm:h-72 md:h-80 px-4 sm:px-6 md:px-9 py-4 sm:py-6 md:py-8 bg-white font-tamdan-placeholder leading-relaxed"
               onChange={(e) => {
                 const value = e.target.value;
 
@@ -261,11 +257,11 @@ export default function AuthInterestPage() {
             <GenerateAgentButton submitting={submitting} onSubmit={onSubmit} />
           </div>
         </form>
-        <div className="flex justify-center mt-2">
-          {status && <span className="text-sm text-gray-700">{status}</span>}
+        <div className="flex justify-center mt-2 sm:mt-3 md:mt-4">
+          {status && <span className="text-xs sm:text-sm text-gray-700">{status}</span>}
         </div>
-        <p className="text-[14px] text-color text-center font-[TamdanAddition]">
-          ““Find Better. Faster. With TAMDAN.””
+        <p className="text-xs sm:text-sm md:text-base text-color text-center font-[TamdanAddition] mt-2 sm:mt-3 md:mt-4">
+          ""Find Better. Faster. With TAMDAN.""
         </p>
       </div>
       <Alert
@@ -283,7 +279,7 @@ export default function AuthInterestPage() {
               <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.2s]"></div>
               <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.4s]"></div>
             </div>
-            <p className="mt-4 text-gray-600 font-medium">
+            <p className="mt-4 text-gray-600 font-medium text-sm sm:text-base">
               Checking your topics...
             </p>
           </div>
