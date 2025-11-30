@@ -264,7 +264,7 @@ export default function AuthInterestPage() {
         <div className="flex justify-center mt-2">
           {status && <span className="text-sm text-gray-700">{status}</span>}
         </div>
-        <p className="text-[14px] text-color text-center">
+        <p className="text-[14px] text-color text-center font-[TamdanAddition]">
           ““Find Better. Faster. With TAMDAN.””
         </p>
       </div>

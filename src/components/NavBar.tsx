@@ -75,18 +75,23 @@ export default function NavBar() {
         if (json?.ok && json.user) {
           setUserEmail(json.user.email ?? null);
           // prefer username from DB; fall back to name claim
-          const nameFromJwt = decodeJwtPayload<{ name?: string }>(idToken)?.name ?? null;
+          const nameFromJwt =
+            decodeJwtPayload<{ name?: string }>(idToken)?.name ?? null;
           setUserName(json.user.username ?? nameFromJwt);
         } else {
           // fallback to token decode for basic display
-          const claims = decodeJwtPayload<{ email?: string; name?: string }>(idToken);
+          const claims = decodeJwtPayload<{ email?: string; name?: string }>(
+            idToken
+          );
           setUserEmail(claims?.email ?? null);
           setUserName(claims?.name ?? null);
         }
       } catch (err) {
         console.error("NavBar loadUser failed", err);
         try {
-          const parsed = JSON.parse(localStorage.getItem("session") || "{}") as {
+          const parsed = JSON.parse(
+            localStorage.getItem("session") || "{}"
+          ) as {
             id_token?: string;
           };
           const claims = decodeJwtPayload<{ email?: string; name?: string }>(
@@ -100,6 +105,51 @@ export default function NavBar() {
 
     loadUser();
   }, [pathname]);
+
+  const handleTelegramConnect = async () => {
+    if (!userEmail) {
+      alert("Please sign in first.");
+      return;
+    }
+
+    try {
+      const sessionRaw = localStorage.getItem("session");
+      if (!sessionRaw) {
+        alert("Session expired. Please log in again.");
+        return;
+      }
+
+      const parsed = JSON.parse(sessionRaw) as { id_token?: string };
+      const idToken = parsed.id_token;
+
+      if (!idToken) {
+        alert("Session expired. Please log in again.");
+        return;
+      }
+
+      // Generate a one-time token for Telegram linking
+      const res = await fetch("/api/bots/generate-telegram-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (json.ok && json.token) {
+        // Use correct Telegram URL format (works on web and mobile)
+        window.open(`https://t.me/tamdanNewsBot?start=${json.token}`, '_blank');
+        setIsDropdownOpen(false);
+      } else {
+        alert("Failed to generate connection link. Please try again.");
+      }
+    } catch (error) {
+      console.error("Telegram connect error:", error);
+      alert("Failed to connect. Please try again.");
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -137,8 +187,8 @@ export default function NavBar() {
           <div>
             <div className="ml-10 flex items-baseline space-x-4">
               <Link href="/interest" className={linkClass("/interest")}>
-                  INTERESTS
-                </Link>
+                INTERESTS
+              </Link>
               <Link href="/explore" className={linkClass("/explore")}>
                 EXPLORES
               </Link>
@@ -154,35 +204,29 @@ export default function NavBar() {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center justify-center"
                 >
-                  <p className=" text-black cursor-pointer font-bold">PROFILE</p>
+                  <p className=" text-black cursor-pointer font-bold">
+                    PROFILE
+                  </p>
                 </button>
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg py-1 z-10">
-                    <div 
+                    <div
                       className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                       onClick={() => {
                         router.push("/profile");
                         setIsDropdownOpen(false);
                       }}
                     >
-                      <p className="text-sm text-gray-700 font-medium">{userName}</p>
+                      <p className="text-sm text-gray-700 font-medium">
+                        {userName}
+                      </p>
                       <p className="text-sm text-gray-500 truncate">
                         {userEmail}
                       </p>
                     </div>
                     <div className="border-t border-gray-100"></div>
                     <button
-                      onClick={() => {
-                        if (!userEmail) {
-                          alert("Please sign in first.");
-                          return;
-                        }
-
-                        const emailParam = encodeURIComponent(userEmail);
-
-                        // Mobile & some desktop clients will auto-send `/start email`
-                        window.location.href = `https://t.me/tamdanNewsBot?start=${emailParam}`;
-                      }}
+                      onClick={handleTelegramConnect}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
                     >
                       Connect with telegram
