@@ -42,11 +42,11 @@ export default function Alert({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50"
+      className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 px-4"
       onClick={handleBackdropClick}
     >
       <div
-        className={`w-full max-w-sm bg-white rounded-2xl p-8 text-center border-2 ${colors.border} animate-fadeIn`}
+        className={`w-full max-w-sm bg-white rounded-2xl p-6 sm:p-8 text-center border-2 ${colors.border} animate-fadeIn`}
         style={colors.glow}
         onClick={(e) => e.stopPropagation()}
       >
@@ -54,17 +54,17 @@ export default function Alert({
           {colors.icon}
         </div>
 
-        <h2 className="text-2xl font-semibold mb-2 text-[#00355A] font-serif">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-2 text-[#00355A] font-serif">
           {colors.title}
         </h2>
 
-        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
+        <p className="text-gray-700 text-xs sm:text-sm leading-relaxed whitespace-pre-line">
           {text}
         </p>
 
         <button
           onClick={onClose}
-          className="mt-6 w-full py-2 rounded-lg font-medium bg-[#00355A] text-white hover:bg-[#00243C] transition"
+          className="mt-6 w-full py-2 rounded-lg font-medium bg-[#00355A] text-white hover:bg-[#00243C] transition text-sm sm:text-base"
         >
           OK
         </button>

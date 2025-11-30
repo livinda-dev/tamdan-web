@@ -11,21 +11,21 @@ export default function QuestionSection() {
     setOpenIndex(openIndex === index ? null : index);
   };
     return(
-        <div className="space-y-8">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8">
           {faqData.map((faq, index) => (
             <div key={index}>
-              <div className="border py-[29px] px-[90px]">
+              <div className="border py-6 sm:py-7 md:py-8 px-4 sm:px-6 md:px-8 lg:px-[90px]">
                 <button
-                  className="w-full flex justify-between items-center cursor-pointer"
+                  className="w-full flex justify-between items-center cursor-pointer gap-4"
                   onClick={() => toggleFaq(index)}
                 >
-                  <p className="text-[20px] font-tamdan-bold">
+                  <p className="text-base sm:text-lg md:text-xl font-tamdan-bold text-left">
                     {faq.question}
                   </p>
                   <img
                     src="/icons/arrowDown.png"
                     alt="arrow"
-                    className={`transform transition-transform ${
+                    className={`transform transition-transform flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 ${
                       openIndex === index ? "rotate-180" : ""
                     }`}
                   />
@@ -39,7 +39,7 @@ export default function QuestionSection() {
                       transition={{ duration: 0.3 }}
                     >
                       <Divider/>
-                      <p className="text-[16px] mt-2">{faq.answer}</p>
+                      <p className="text-sm sm:text-base md:text-lg mt-4 leading-relaxed">{faq.answer}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>

@@ -9,11 +9,11 @@ interface GenerateAgentButtonProps {
 
 const GenerateAgentButton: React.FC<GenerateAgentButtonProps> = ({ submitting, onSubmit }) => {
     return (
-        <div className="absolute bottom-4 right-4">
+        <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 md:bottom-4 md:right-4">
             <button
                 type="submit"
                 disabled={submitting}
-                className="w-full md:w-[180px] text-[16px] h-[39px] bg-primary-color text-white px-2 pb-0.5 hover:bg-primary-color disabled:opacity-60"
+                className="text-xs sm:text-sm md:text-base h-8 sm:h-9 md:h-10 px-3 sm:px-4 md:px-5 bg-primary-color text-white hover:bg-primary-color disabled:opacity-60 whitespace-nowrap"
                 onClick={onSubmit}
             >
                 {submitting ? "Submitting..." : "Generate your agent"}

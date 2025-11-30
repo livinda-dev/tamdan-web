@@ -12,10 +12,6 @@ interface UserRow {
   created_at?: string;
 }
 
-
-
-
-
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserRow | null>(null);
@@ -89,33 +85,34 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-            <div className="flex gap-2">
-              <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce"></div>
-              <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.2s]"></div>
-              <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.4s]"></div>
-            </div>
-            <p className="mt-4 text-gray-600 font-medium">
-              Loading your daily insights...
-            </p>
-          </div>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4">
+        <div className="flex gap-2">
+          <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce"></div>
+          <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.2s]"></div>
+          <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.4s]"></div>
+        </div>
+        <p className="mt-4 text-gray-600 font-medium text-sm sm:text-base">
+          Loading your profile...
+        </p>
+      </div>
     );
   }
 
   if (!user) return null;
 
   return (
-    <main className="min-h-screen background-color">
-      <div className="max-w-4xl mx-auto px-8 py-12">
-        <h2 className="text-2xl font-[TamdanBold] primary-color mb-6 text-center">
+    <main className="min-h-screen background-color px-4 sm:px-6 md:px-8">
+      <div className="max-w-2xl mx-auto py-6 sm:py-8 md:py-12">
+        <h2 className="text-2xl sm:text-3xl font-[TamdanBold] primary-color mb-6 sm:mb-8 text-center">
           Profile Information
         </h2>
 
-        <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
+        <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8 space-y-6">
+          {/* Username Section */}
           <div>
-            <label className="text-sm text-gray-500 block">Username</label>
+            <label className="text-xs sm:text-sm text-gray-500 block mb-2">Username</label>
             <textarea
-              className="w-full border-b-2 border-gray-300 focus:outline-none focus:border-blue-600 py-1 text-lg text-gray-900 resize-none"
+              className="w-full border-b-2 border-gray-300 focus:outline-none focus:border-blue-600 py-2 text-base sm:text-lg text-gray-900 resize-none px-0"
               value={editUsername}
               onChange={(e) => {
                 setStatusMsg(null);
@@ -127,7 +124,7 @@ export default function ProfilePage() {
             {editUsername !== (user.username ?? "") && (
               <div className="mt-3">
                 <button
-                  className={`px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50`}
+                  className="px-4 py-2 rounded-md text-white text-sm sm:text-base bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                   onClick={async () => {
                     setSaving(true);
                     setStatusMsg(null);
@@ -168,17 +165,18 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {statusMsg && <p className="mt-2 text-sm text-gray-600">{statusMsg}</p>}
+            {statusMsg && <p className="mt-2 text-xs sm:text-sm text-gray-600">{statusMsg}</p>}
           </div>
 
+          {/* Email Section */}
           <div>
-            <label className="text-sm text-gray-500 block">Email</label>
-            <div className="flex items-center justify-between">
-              <p className="text-lg text-gray-900">{user.email ?? "—"}</p>
+            <label className="text-xs sm:text-sm text-gray-500 block mb-2">Email</label>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <p className="text-base sm:text-lg text-gray-900">{user.email ?? "—"}</p>
               <button
                 onClick={handleChangeEmail}
                 disabled={changingEmail}
-                className="ml-4 px-3 py-2 rounded-md text-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 rounded-md text-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
               >
                 {changingEmail ? "Changing..." : "Change Email"}
               </button>
@@ -190,31 +188,31 @@ export default function ProfilePage() {
       {/* Change Email Confirmation Modal */}
       {showChangeEmailPrompt && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50"
+          className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 px-4"
           onClick={handleCancelChangeEmail}
         >
           <div
-            className="bg-white rounded-lg shadow-xl px-8 py-8 text-center max-w-sm w-full"
+            className="bg-white rounded-lg shadow-xl px-6 sm:px-8 py-6 sm:py-8 text-center max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
               Change Email
             </h3>
-            <p className="text-gray-600 text-sm mb-6">
-              To change your email, you need to log in via Google again. We will verify that the new email doesn&apos;t already exist in our system before updating your account.
+            <p className="text-gray-600 text-xs sm:text-sm mb-6 leading-relaxed">
+              To change your email, you need to log in via Google again. We will verify that the new email doesn't already exist in our system before updating your account.
             </p>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleCancelChangeEmail}
-                className="flex-1 px-4 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300"
+                className="flex-1 px-4 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmChangeEmail}
                 disabled={changingEmail}
-                className="flex-1 px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                className="flex-1 px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-sm sm:text-base"
               >
                 {changingEmail ? "Signing in..." : "Continue"}
               </button>

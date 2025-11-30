@@ -28,6 +28,7 @@ export default function NavBar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -167,25 +168,26 @@ export default function NavBar() {
   }, [dropdownRef]);
 
   const linkClass = (path: string) =>
-    `px-3 py-2 text-sm font-medium ${
+    `px-2 md:px-3 py-2 text-xs md:text-sm font-medium ${
       pathname === path ? " underline text-color" : "text-color"
     }`;
 
   return (
-    <nav className="background-color shadow-md">
-      <div className="mx-auto sm:px-[120px] lg:px-[120px] px-[120px]">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
-            <div>
-              <img
-                src="/image/LogoTamdan.png"
-                alt="Logo"
-                className="h-8 w-auto"
-              />
-            </div>
+    <nav className="background-color shadow-md sticky top-0 z-40">
+      <div className="px-4 sm:px-6 md:px-12 lg:px-[120px]">
+        <div className="flex h-14 md:h-16 items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center flex-shrink-0">
+            <img
+              src="/image/LogoTamdan.png"
+              alt="Logo"
+              className="h-6 md:h-8 w-auto"
+            />
           </div>
-          <div>
-            <div className="ml-10 flex items-baseline space-x-4">
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex">
+            <div className="ml-6 lg:ml-10 flex items-baseline space-x-2 lg:space-x-4">
               <Link href="/interest" className={linkClass("/interest")}>
                 INTERESTS
               </Link>
@@ -197,14 +199,16 @@ export default function NavBar() {
               </Link>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+
+          {/* Desktop Auth Section */}
+          <div className="hidden md:flex items-center space-x-3">
             {isLoggedIn ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center justify-center"
                 >
-                  <p className=" text-black cursor-pointer font-bold">
+                  <p className="text-black cursor-pointer font-bold text-sm">
                     PROFILE
                   </p>
                 </button>
@@ -242,23 +246,119 @@ export default function NavBar() {
                 )}
               </div>
             ) : (
-              <div>
+              <div className="flex items-center space-x-2">
                 <button
                   onClick={handleOpenGoogle}
-                  className="bg-primary-color text-white px-3 py-2 text-sm cursor-pointer"
+                  className="bg-primary-color text-white px-2 md:px-3 py-2 text-xs md:text-sm cursor-pointer whitespace-nowrap"
                 >
                   SIGN UP
                 </button>
                 <button
                   onClick={handleOpenGoogle}
-                  className="text-color px-3 py-2 text-sm font-bold cursor-pointer"
+                  className="text-color px-2 md:px-3 py-2 text-xs md:text-sm font-bold cursor-pointer whitespace-nowrap"
                 >
                   LOGIN
                 </button>
               </div>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-md"
+          >
+            <svg
+              className="h-6 w-6 text-color"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {isMobileMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden pb-3 space-y-1">
+            <Link href="/interest" className="block px-3 py-2 rounded-md text-sm font-medium text-color">
+              INTERESTS
+            </Link>
+            <Link href="/explore" className="block px-3 py-2 rounded-md text-sm font-medium text-color">
+              EXPLORES
+            </Link>
+            <Link href="/faqs" className="block px-3 py-2 rounded-md text-sm font-medium text-color">
+              FAQs
+            </Link>
+            {isLoggedIn ? (
+              <>
+                <button
+                  onClick={() => {
+                    router.push("/profile");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
+                >
+                  PROFILE
+                </button>
+                <button
+                  onClick={() => {
+                    handleTelegramConnect();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
+                >
+                  Connect Telegram
+                </button>
+                <button
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color hover:text-red-500"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    handleOpenGoogle();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium bg-primary-color text-white"
+                >
+                  SIGN UP
+                </button>
+                <button
+                  onClick={() => {
+                    handleOpenGoogle();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
+                >
+                  LOGIN
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
       <GoogleSignInModal
         isOpen={isGoogleModalOpen}
