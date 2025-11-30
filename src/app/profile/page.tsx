@@ -107,7 +107,7 @@ export default function ProfilePage() {
           Profile Information
         </h2>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8 space-y-6">
+        <div className="bg-white shadow-lg p-6 sm:p-8 space-y-6">
           {/* Username Section */}
           <div>
             <label className="text-xs sm:text-sm text-gray-500 block mb-2">Username</label>
@@ -176,7 +176,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleChangeEmail}
                 disabled={changingEmail}
-                className="px-4 py-2 rounded-md text-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+                className="px-4 py-2  text-sm text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
               >
                 {changingEmail ? "Changing..." : "Change Email"}
               </button>
@@ -192,7 +192,7 @@ export default function ProfilePage() {
           onClick={handleCancelChangeEmail}
         >
           <div
-            className="bg-white rounded-lg shadow-xl px-6 sm:px-8 py-6 sm:py-8 text-center max-w-sm w-full"
+            className="bg-white shadow-xl px-6 sm:px-8 py-6 sm:py-8 text-center max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
@@ -212,7 +212,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleConfirmChangeEmail}
                 disabled={changingEmail}
-                className="flex-1 px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-sm sm:text-base"
+                className="flex-1 px-4 py-2 rounded-md text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 text-sm sm:text-base"
               >
                 {changingEmail ? "Signing in..." : "Continue"}
               </button>

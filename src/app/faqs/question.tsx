@@ -25,7 +25,7 @@ export default function QuestionSection() {
                   <img
                     src="/icons/arrowDown.png"
                     alt="arrow"
-                    className={`transform transition-transform flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 ${
+                    className={`transform transition-transform flex-shrink-0 ${
                       openIndex === index ? "rotate-180" : ""
                     }`}
                   />
