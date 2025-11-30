@@ -188,7 +188,7 @@ export default function AuthInterestPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 sm:px-6 justify-center">
+    <div className="min-h-screen flex flex-col items-center px-4 sm:px-6 sm:justify-center md:justify-start">
       <div className="w-full max-w-2xl">
         <p className="text-xs sm:text-sm md:text-base text-color pt-6 sm:pt-8 md:pt-10 text-center">
           _____Write your interests here_____

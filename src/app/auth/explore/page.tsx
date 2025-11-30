@@ -143,6 +143,13 @@ export default function AuthExplorePage({ newsHeader, newsTopics }: Props) {
                 setContent(formatted);
               }}
               rows={5}
+              placeholder={
+                savedContent
+                  ? ""
+                  : `• Cambodia-Thailand Border
+• Stock Market
+• AI Coding Tools`
+              }
             />
           </div>
         </form>

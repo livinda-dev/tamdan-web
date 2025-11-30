@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import Logo from "../../public/logo.svg";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "tamdan.co",
+  icons: {
+    icon: Logo.src,
+  },
   description: "news automation sumary AI agent",
 };
 
