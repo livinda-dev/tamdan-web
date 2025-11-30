@@ -274,6 +274,7 @@ export default function AuthInterestPage() {
         isOpen={isALertOpen}
         onClose={() => setIsAlertOpen(false)}
       />
+      
       {submitting && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
           <div className="min-h-screen flex flex-col items-center justify-center">
