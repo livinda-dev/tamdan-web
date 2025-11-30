@@ -62,7 +62,7 @@ export default function ExplorePage() {
         ) : newsHeader ? (
           <AuthExplorePage newsHeader={newsHeader} newsTopics={newsTopics} />
         ) : (
-          <p>No news available.</p>
+          <p className="text-center">No news available.</p>
         )
       ) : (
         <NoAuthExplorePage />

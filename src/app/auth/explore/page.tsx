@@ -35,15 +35,6 @@ export default function AuthExplorePage({ newsHeader, newsTopics }: Props) {
   const [openSections, setOpenSections] = useState<number[]>([0]);
   const [content, setContent] = useState("");
 
-  const toggle = (idx: number) => {
-    setOpenSections((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
-    );
-  };
-
-  if (!newsHeader || !newsTopics) {
-    return null;
-  }
 
   const fetchEntries = async (token: string) => {
     try {
@@ -99,6 +90,18 @@ export default function AuthExplorePage({ newsHeader, newsTopics }: Props) {
         console.error("Failed to read session", e);
       }
     }, [router]);
+
+  const toggle = (idx: number) => {
+    setOpenSections((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
+
+  if (!newsHeader || !newsTopics) {
+    return null;
+  }
+
+  
 
   return (
     <div className="min-h-screen px-4 sm:px-6 md:px-12 lg:px-[96px]">
