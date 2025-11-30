@@ -116,7 +116,7 @@ export default function AuthExplorePage({ newsHeader, newsTopics }: Props) {
               onChange={(e) => {
                 const value = e.target.value;
 
-                let lines = value.split("\n");
+                const lines = value.split("\n");
 
                 // Count only non-empty lines (ignore blank lines)
                 const nonEmptyCount = lines.filter(
