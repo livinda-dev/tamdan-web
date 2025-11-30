@@ -44,6 +44,7 @@ export default function ExplorePage() {
       router.replace("/");
     }
   }, [router]);
+  
 
   return (
     <div>
