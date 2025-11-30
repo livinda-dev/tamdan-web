@@ -261,7 +261,7 @@ export default function AuthInterestPage() {
           {status && <span className="text-xs sm:text-sm text-gray-700">{status}</span>}
         </div>
         <p className="text-xs sm:text-sm md:text-base text-color text-center font-[TamdanAddition] mt-2 sm:mt-3 md:mt-4">
-          ""Find Better. Faster. With TAMDAN.""
+          Find Better. Faster. With TAMDAN.
         </p>
       </div>
       <Alert

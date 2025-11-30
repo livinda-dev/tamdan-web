@@ -12,7 +12,7 @@ export default function FaqsPage() {
             <span className="primary-color font-tamdan-bold"> TAMDAN</span>
           </p>
           <p className="text-sm sm:text-base md:text-lg leading-relaxed">
-            You've entered the FAQ Path — where TAMDAN answers all your
+            You have entered the FAQ Path — where TAMDAN answers all your
             questions. Learn how our AI finds trusted news, sends updates to
             your Telegram or Gmail, and keeps your information accurate and
             personal. Still wondering about something? Just ask TAMDAN — your AI
