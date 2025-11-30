@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
   }
 
   const tokenJson = await tokenRes.json();
-  const { id_token, access_token, refresh_token, expires_in, token_type } = tokenJson as {
+  const { id_token, access_token, expires_in, token_type } = tokenJson as {
     id_token?: string;
     access_token: string;
     refresh_token?: string;
@@ -112,57 +112,62 @@ export async function GET(req: NextRequest) {
   }
 
   // Persist minimal user info to Supabase (best-effort; do not block login on failure)
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  // BUT: Skip persistence if this is an email change flow - the change-email endpoint will handle it
+  const isEmailChangeFlow = req.nextUrl.searchParams.get("state") === "email_change";
+  
+  if (!isEmailChangeFlow) {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.warn("[OAuth Callback] Missing Supabase env vars; skipping persistence.");
-    } else if (!googleUser) {
-      console.warn("[OAuth Callback] Missing googleUser profile; skipping persistence.");
-    } else {
-      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        console.warn("[OAuth Callback] Using anon key for writes — ensure RLS allows insert into public.user or set SUPABASE_SERVICE_ROLE_KEY on server.");
-      }
-
-      const supabase = createSupabaseClient(supabaseUrl, supabaseKey, {
-        auth: { persistSession: false },
-      });
-
-      const email = googleUser.email ?? null;
-      const baseName = (googleUser.name || (email ? email.split("@")[0] : "Google User")).trim();
-      const username = baseName.substring(0, 100) || "Google User";
-
-      const payload: { username: string; email: string | null;  created_at: string } = {
-        username,
-        email,
-        created_at: new Date().toISOString(),
-      };
-
-      if (email) {
-        const { data, error } = await supabase
-          .from("user")
-          .upsert(payload, { onConflict: "email" })
-          .select();
-        if (error) {
-          console.error("[OAuth Callback] Supabase upsert error:", error.message);
-        } else {
-          console.log("[OAuth Callback] Supabase upsert success", { rows: data?.length || 0, user: data?.[0] });
-        }
+      if (!supabaseUrl || !supabaseKey) {
+        console.warn("[OAuth Callback] Missing Supabase env vars; skipping persistence.");
+      } else if (!googleUser) {
+        console.warn("[OAuth Callback] Missing googleUser profile; skipping persistence.");
       } else {
-        const { data, error } = await supabase
-          .from("user")
-          .insert(payload)
-          .select();
-        if (error) {
-          console.error("[OAuth Callback] Supabase insert error:", error.message);
+        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+          console.warn("[OAuth Callback] Using anon key for writes — ensure RLS allows insert into public.user or set SUPABASE_SERVICE_ROLE_KEY on server.");
+        }
+
+        const supabase = createSupabaseClient(supabaseUrl, supabaseKey, {
+          auth: { persistSession: false },
+        });
+
+        const email = googleUser.email ?? null;
+        const baseName = (googleUser.name || (email ? email.split("@")[0] : "Google User")).trim();
+        const username = baseName.substring(0, 100) || "Google User";
+
+        const payload: { username: string; email: string | null;  created_at: string } = {
+          username,
+          email,
+          created_at: new Date().toISOString(),
+        };
+
+        if (email) {
+          const { data, error } = await supabase
+            .from("user")
+            .upsert(payload, { onConflict: "email" })
+            .select();
+          if (error) {
+            console.error("[OAuth Callback] Supabase upsert error:", error.message);
+          } else {
+            console.log("[OAuth Callback] Supabase upsert success", { rows: data?.length || 0, user: data?.[0] });
+          }
         } else {
-          console.log("[OAuth Callback] Supabase insert success", { rows: data?.length || 0, user: data?.[0] });
+          const { data, error } = await supabase
+            .from("user")
+            .insert(payload)
+            .select();
+          if (error) {
+            console.error("[OAuth Callback] Supabase insert error:", error.message);
+          } else {
+            console.log("[OAuth Callback] Supabase insert success", { rows: data?.length || 0, user: data?.[0] });
+          }
         }
       }
+    } catch (e) {
+      console.error("[OAuth Callback] Exception during Supabase persistence:", e);
     }
-  } catch (e) {
-    console.error("[OAuth Callback] Exception during Supabase persistence:", e);
   }
 
   // Return a tiny HTML page that stores the session in browser localStorage and then redirects
@@ -174,21 +179,39 @@ export async function GET(req: NextRequest) {
   };
 
   const sessionB64 = Buffer.from(JSON.stringify(sessionObj)).toString("base64");
-  const redirectTo = `${siteUrl}/interest`; // go directly to profile; landing will also work
-
+  const newEmailB64 = Buffer.from(googleUser?.email || "").toString("base64");
+  const stateParam = req.nextUrl.searchParams.get("state") || "login";
+  
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Signing you in…</title></head>
 <body>
 <script>
 (function(){
   try {
-    var json = atob('${sessionB64}');
-    localStorage.setItem('session', json);
+    var isEmailChange = '${stateParam}' === 'email_change';
+    
+    // For email change: store session in sessionStorage temporarily (not localStorage) until verification
+    // For normal login: save to localStorage immediately
+    if (isEmailChange) {
+      // Don't save to localStorage yet - wait for verification
+      var newEmail = atob('${newEmailB64}');
+      if (newEmail) {
+        sessionStorage.setItem('newEmail', newEmail);
+      }
+      // Store session temporarily in sessionStorage for the change-email page
+      var sessionJson = atob('${sessionB64}');
+      sessionStorage.setItem('tempSession', sessionJson);
+      window.location.replace('${siteUrl}/profile/change-email');
+    } else {
+      // Normal login - save session immediately
+      var json = atob('${sessionB64}');
+      localStorage.setItem('session', json);
+      window.location.replace('${siteUrl}/interest');
+    }
   } catch (e) {
-    console.error('Failed to save session to localStorage', e);
+    console.error('Failed to process authentication', e);
+    window.location.replace('${siteUrl}/');
   }
-  // Navigate after storing
-  window.location.replace('${redirectTo}');
 })();
 </script>
 <p>Signing you in…</p>

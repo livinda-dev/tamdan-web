@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import GoogleSignInModal from "./googleButton";
-import GenerateAgentButton from "./GenerateAgentButton";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/alert";
+import GenerateAgentButton from "@/components/GenerateAgentButton";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
@@ -23,7 +22,7 @@ function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   }
 }
 
-export default function LandingPage() {
+export default function AuthInterestPage() {
   const router = useRouter();
   const [idToken, setIdToken] = useState<string | null>(null);
   const [content, setContent] = useState("");
@@ -52,7 +51,7 @@ export default function LandingPage() {
         if (dbContent) {
           const withDashes = dbContent
             .split(",")
-            .map((t: string) => `- ${t.trim()}`)
+            .map((t: string) => `• ${t.trim()}`)
             .join("\n");
 
           setContent(withDashes);
@@ -68,22 +67,46 @@ export default function LandingPage() {
     }
   };
 
+  const fetchNews  = async (token: string) => {
+    try {
+      const res = await fetch("/api/news", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const json = await res.json();
+      if (json.ok) {
+        console.log("Fetched news:", json);
+      } else {
+        console.error("Failed to fetch news:", json.error);
+      }
+    } catch (e) {
+      console.error("Failed to fetch news", e);
+    }
+  }
+
   useEffect(() => {
     if (idToken) {
       fetchEntries(idToken);
+      fetchNews(idToken);
     }
   }, [idToken]);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem("session");
-      if (raw) {
-        const session = JSON.parse(raw) as { id_token?: string };
-        if (session?.id_token) {
-          router.replace("/interest");
-          return;
-        }
+      if (!raw) {
+        router.replace("/");
+        return;
       }
+      const session = JSON.parse(raw) as { id_token?: string };
+      if (!session?.id_token) {
+        setIsGoogleModalOpen(true);
+        return;
+      }
+      setIdToken(session.id_token);
+      const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
+      setUserEmail(claims?.email ?? null);
     } catch (e) {
       console.error("Failed to read session", e);
       setIsGoogleModalOpen(true);
@@ -103,9 +126,9 @@ export default function LandingPage() {
     }
 
     // Convert textarea into array
-    const  arrayContent = content
+    const arrayContent = content
       .split("\n")
-      .map((line) => line.replace(/^- /, "").trim())
+      .map((line) => line.replace(/^. /, "").trim())
       .filter((line) => line.length > 0);
 
     // ❌ Block if more than 5 topics
@@ -170,24 +193,16 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center">
-      {/* Title */}
-      <p className="text-color tracking-widest text-center text-[36px] font-[TamdanRegular]">
-        Discover smarter searching with{" "}
-        <span className="font-bold primary-color text-[30px]">TAMDAN</span>
-      </p>
-      {/* Subtitle */}
-      <p className="text-color tracking-widest mb-10 text-center text-[36px] font-[TamdanRegular]">
-        an AI-powered agent that understands you better every time.
-      </p>
-
       <div className="w-[744px]">
-        <p className="text-[16px] text-color mb-6 text-center ">
+        <p className="text-[14px] text-color pt-[40px] text-center ">
           _____Write your interests here_____
         </p>
         <form onSubmit={onSubmit}>
           <div className="relative">
             <textarea
               value={content}
+              maxLength={200}
+              className="w-full h-[320px] px-[35px] py-[30px] bg-white font-tamdan-placeholder leading-[2]"
               onChange={(e) => {
                 const value = e.target.value;
 
@@ -220,11 +235,14 @@ export default function LandingPage() {
                     // Allow blank lines normally
                     if (line.trim() === "") return "";
 
-                    // Remove ONLY one leading dash + optional space
-                    const withoutDash = line.replace(/^-\s?/, "");
+                    // Remove ONLY one leading bullet + optional space OR dash
+                    const withoutBullet = line.replace(/^[•\-]\s?/, "");
 
-                    // Final line must always start with "- "
-                    return `- ${withoutDash}`;
+                    // Limit each line to 50 characters
+                    const limited = withoutBullet.slice(0, 50);
+
+                    // Final line must always start with "• "
+                    return `• ${limited}`;
                   })
                   .join("\n");
 
@@ -234,12 +252,10 @@ export default function LandingPage() {
               placeholder={
                 savedContent
                   ? ""
-                  : `- Gold market and Impact
-- Cease fire between Israel and Hamas
-- Human jobs that AI may eliminate`
+                  : `• Gold market and Impact
+• Cease fire between Israel and Hamas
+• Human jobs that AI may eliminate`
               }
-              maxLength={200}
-              className="w-full h-[320px] px-[35px] py-[30px] bg-white"
             />
 
             <GenerateAgentButton submitting={submitting} onSubmit={onSubmit} />
@@ -248,76 +264,10 @@ export default function LandingPage() {
         <div className="flex justify-center mt-2">
           {status && <span className="text-sm text-gray-700">{status}</span>}
         </div>
-        <p className="text-[16px] text-color mb-6 text-center">
+        <p className="text-[14px] text-color text-center font-[TamdanAddition]">
           ““Find Better. Faster. With TAMDAN.””
         </p>
       </div>
-
-      <div className="w-full bg-[#EFF0EC] px-[117px] py-[44px]">
-        <div>
-          <p className="text-[18px] leading-relaxed font-normal text-[#1A1A1A]">
-            <span className="float-left text-[56px] font-[TamdanBold] leading-[0.8] mr-3 mt-1">
-              T
-            </span>
-            AMDAN is an intelligent, AI-powered search companion designed to
-            keep you informed and connected. Powered by advanced technologies
-            like GPT-5 and n8n automation, TAMDAN goes beyond ordinary search —
-            it gathers real-time news, analyzes trusted sources, and delivers
-            personalized insights that matter to you.
-          </p>
-        </div>
-        <div className="mt-[44px]">
-          <p>
-            Stay ahead effortlessly with instant alerts through Telegram chatbot
-            notifications or in-app messages whenever new updates match your
-            interests.
-          </p>
-        </div>
-        <div className="flex justify-around mt-[44px]">
-          <div
-            className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px]"
-            onClick={() => {
-              if (!userEmail) {
-                alert("Please sign in first.");
-                return;
-              }
-
-              const emailParam = encodeURIComponent(userEmail);
-
-              // Mobile & some desktop clients will auto-send `/start email`
-              window.location.href = `https://t.me/tamdanNewsBot?start=${emailParam}`;
-            }}
-          >
-            <img
-              src="/image/telegram.png"
-              alt="Telegram"
-              className="h-auto w-auto"
-            />
-            <p className="text-[24px]">TELEGRAM CHATBOT</p>
-          </div>
-
-          <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
-            <img src="/image/gmail.png" alt="Gmail" className="h-auto w-auto" />
-            <p className="text-[24px]">ALERT BY GMAIL</p>
-          </div>
-          <div className="flex items-center space-x-3 bg-white px-[9px] py-[7px] w-[392px] h-[71px] ">
-            <img src="/image/sms.png" alt="SMS" className="h-auto w-auto" />
-            <p className="text-[24px]">SMS MESSAGE APP</p>
-          </div>
-        </div>
-        <div className="mt-[44px]">
-          <p>
-            Whether it’s daily news, research insights, or topic-specific
-            trends, TAMDAN ensures you never miss what’s important — your
-            intelligent search partner, powered by AI.
-          </p>
-        </div>
-      </div>
-
-      <GoogleSignInModal
-        isOpen={isGoogleModalOpen}
-        onClose={() => setIsGoogleModalOpen(false)}
-      />
       <Alert
         text={alertText}
         status={alertStatus}
@@ -326,9 +276,13 @@ export default function LandingPage() {
       />
       {submitting && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
-          <div className="bg-white px-8 py-6 rounded-xl shadow-lg text-center">
-            <div className="loader border-4 border-gray-300 border-t-blue-500 rounded-full w-12 h-12 mx-auto animate-spin"></div>
-            <p className="mt-4 text-gray-700 text-lg font-medium">
+          <div className="min-h-screen flex flex-col items-center justify-center">
+            <div className="flex gap-2">
+              <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce"></div>
+              <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.2s]"></div>
+              <div className="w-4 h-4 bg-primary-color rounded-full animate-bounce [animation-delay:-.4s]"></div>
+            </div>
+            <p className="mt-4 text-gray-600 font-medium">
               Checking your topics...
             </p>
           </div>
