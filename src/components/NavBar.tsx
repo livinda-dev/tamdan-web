@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
-import GoogleSignInModal from "@/app/landing/googleButton";
+import GoogleSignInModal from "@/components/googleButton";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
@@ -28,6 +28,7 @@ export default function NavBar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -39,29 +40,117 @@ export default function NavBar() {
   const logout = () => {
     try {
       localStorage.removeItem("session");
+      localStorage.removeItem("currentEmail");
+      localStorage.removeItem("currentIdToken");
     } catch {}
     setIsLoggedIn(false);
     router.replace("/");
   };
 
   useEffect(() => {
-    const session = localStorage.getItem("session");
-    if (session) {
-      setIsLoggedIn(true);
-      try {
-        const parsedSession = JSON.parse(session) as { id_token?: string };
-        const claims = decodeJwtPayload<{ email?: string; name?: string }>(
-          parsedSession.id_token
-        );
-        setUserEmail(claims?.email ?? null);
-        setUserName(claims?.name ?? null);
-      } catch (e) {
-        console.error("Failed to parse session", e);
+    async function loadUser() {
+      const sessionRaw = localStorage.getItem("session");
+      if (!sessionRaw) {
+        setIsLoggedIn(false);
+        setUserEmail(null);
+        setUserName(null);
+        return;
       }
-    } else {
-      setIsLoggedIn(false);
+
+      setIsLoggedIn(true);
+
+      try {
+        const parsed = JSON.parse(sessionRaw) as { id_token?: string };
+        const idToken = parsed.id_token;
+        if (!idToken) {
+          setIsLoggedIn(false);
+          return;
+        }
+
+        // Try fetching profile from server (uses same Authorization check as /profile page)
+        const res = await fetch("/api/profile", {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        const json = await res.json();
+
+        if (json?.ok && json.user) {
+          setUserEmail(json.user.email ?? null);
+          // prefer username from DB; fall back to name claim
+          const nameFromJwt =
+            decodeJwtPayload<{ name?: string }>(idToken)?.name ?? null;
+          setUserName(json.user.username ?? nameFromJwt);
+        } else {
+          // fallback to token decode for basic display
+          const claims = decodeJwtPayload<{ email?: string; name?: string }>(
+            idToken
+          );
+          setUserEmail(claims?.email ?? null);
+          setUserName(claims?.name ?? null);
+        }
+      } catch (err) {
+        console.error("NavBar loadUser failed", err);
+        try {
+          const parsed = JSON.parse(
+            localStorage.getItem("session") || "{}"
+          ) as {
+            id_token?: string;
+          };
+          const claims = decodeJwtPayload<{ email?: string; name?: string }>(
+            parsed.id_token
+          );
+          setUserEmail(claims?.email ?? null);
+          setUserName(claims?.name ?? null);
+        } catch {}
+      }
     }
+
+    loadUser();
   }, [pathname]);
+
+  const handleTelegramConnect = async () => {
+    if (!userEmail) {
+      alert("Please sign in first.");
+      return;
+    }
+
+    try {
+      const sessionRaw = localStorage.getItem("session");
+      if (!sessionRaw) {
+        alert("Session expired. Please log in again.");
+        return;
+      }
+
+      const parsed = JSON.parse(sessionRaw) as { id_token?: string };
+      const idToken = parsed.id_token;
+
+      if (!idToken) {
+        alert("Session expired. Please log in again.");
+        return;
+      }
+
+      // Generate a one-time token for Telegram linking
+      const res = await fetch("/api/bots/generate-telegram-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (json.ok && json.token) {
+        // Use correct Telegram URL format (works on web and mobile)
+        window.open(`https://t.me/tamdanNewsBot?start=${json.token}`, '_blank');
+        setIsDropdownOpen(false);
+      } else {
+        alert("Failed to generate connection link. Please try again.");
+      }
+    } catch (error) {
+      console.error("Telegram connect error:", error);
+      alert("Failed to connect. Please try again.");
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -79,34 +168,29 @@ export default function NavBar() {
   }, [dropdownRef]);
 
   const linkClass = (path: string) =>
-    `px-3 py-2 rounded-md text-sm font-medium ${
+    `px-2 md:px-3 py-2 text-xs md:text-sm font-medium ${
       pathname === path ? " underline text-color" : "text-color"
     }`;
 
   return (
-    <nav className="background-color shadow-md">
-      <div className="mx-auto sm:px-[120px] lg:px-[120px] px-[120px]">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
-            <div>
-              <img
-                src="/image/LogoTamdan.png"
-                alt="Logo"
-                className="h-auto w-auto"
-              />
-            </div>
+    <nav className="background-color shadow-md sticky top-0 z-40">
+      <div className="px-4 sm:px-6 md:px-12 lg:px-[120px]">
+        <div className="flex h-14 md:h-16 items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center flex-shrink-0">
+            <img
+              src="/image/LogoTamdan.png"
+              alt="Logo"
+              className="h-6 md:h-8 w-auto"
+            />
           </div>
-          <div>
-            <div className="ml-10 flex items-baseline space-x-4">
-              {isLoggedIn ? (
-                <Link href="/interest" className={linkClass("/interest")}>
-                  INTERESTS
-                </Link>
-              ) : (
-                <Link href="/" className={linkClass("/")}>
-                  INTERESTS
-                </Link>
-              )}
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex">
+            <div className="ml-6 lg:ml-10 flex items-baseline space-x-2 lg:space-x-4">
+              <Link href="/interest" className={linkClass("/interest")}>
+                INTERESTS
+              </Link>
               <Link href="/explore" className={linkClass("/explore")}>
                 EXPLORES
               </Link>
@@ -115,36 +199,38 @@ export default function NavBar() {
               </Link>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+
+          {/* Desktop Auth Section */}
+          <div className="hidden md:flex items-center space-x-3">
             {isLoggedIn ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center justify-center"
                 >
-                  <p className=" text-black cursor-pointer">PROFILE</p>
+                  <p className="text-black cursor-pointer font-bold text-sm">
+                    PROFILE
+                  </p>
                 </button>
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                    <div className="px-4 py-2">
-                      <p className="text-sm text-gray-700">{userName}</p>
+                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg py-1 z-10">
+                    <div
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        router.push("/profile");
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      <p className="text-sm text-gray-700 font-medium">
+                        {userName}
+                      </p>
                       <p className="text-sm text-gray-500 truncate">
                         {userEmail}
                       </p>
                     </div>
                     <div className="border-t border-gray-100"></div>
                     <button
-                      onClick={() => {
-                        if (!userEmail) {
-                          alert("Please sign in first.");
-                          return;
-                        }
-
-                        const emailParam = encodeURIComponent(userEmail);
-
-                        // Mobile & some desktop clients will auto-send `/start email`
-                        window.location.href = `https://t.me/tamdanNewsBot?start=${emailParam}`;
-                      }}
+                      onClick={handleTelegramConnect}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
                     >
                       Connect with telegram
@@ -152,7 +238,7 @@ export default function NavBar() {
                     <div className="border-t border-gray-100"></div>
                     <button
                       onClick={logout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-500 cursor-pointer"
                     >
                       Logout
                     </button>
@@ -160,23 +246,119 @@ export default function NavBar() {
                 )}
               </div>
             ) : (
-              <div>
+              <div className="flex items-center space-x-2">
                 <button
                   onClick={handleOpenGoogle}
-                  className="bg-primary-color text-white px-3 py-2 rounded-md text-sm cursor-pointer"
+                  className="bg-primary-color text-white px-2 md:px-3 py-2 text-xs md:text-sm cursor-pointer whitespace-nowrap"
                 >
                   SIGN UP
                 </button>
                 <button
                   onClick={handleOpenGoogle}
-                  className="text-color px-3 py-2 rounded-md text-sm font-bold cursor-pointer"
+                  className="text-color px-2 md:px-3 py-2 text-xs md:text-sm font-bold cursor-pointer whitespace-nowrap"
                 >
                   LOGIN
                 </button>
               </div>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-md"
+          >
+            <svg
+              className="h-6 w-6 text-color"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {isMobileMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden pb-3 space-y-1">
+            <Link href="/interest" className="block px-3 py-2 rounded-md text-sm font-medium text-color">
+              INTERESTS
+            </Link>
+            <Link href="/explore" className="block px-3 py-2 rounded-md text-sm font-medium text-color">
+              EXPLORES
+            </Link>
+            <Link href="/faqs" className="block px-3 py-2 rounded-md text-sm font-medium text-color">
+              FAQs
+            </Link>
+            {isLoggedIn ? (
+              <>
+                <button
+                  onClick={() => {
+                    router.push("/profile");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
+                >
+                  PROFILE
+                </button>
+                <button
+                  onClick={() => {
+                    handleTelegramConnect();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
+                >
+                  Connect Telegram
+                </button>
+                <button
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color hover:text-red-500"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    handleOpenGoogle();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium bg-primary-color text-white"
+                >
+                  SIGN UP
+                </button>
+                <button
+                  onClick={() => {
+                    handleOpenGoogle();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
+                >
+                  LOGIN
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
       <GoogleSignInModal
         isOpen={isGoogleModalOpen}

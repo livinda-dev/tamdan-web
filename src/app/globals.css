@@ -41,19 +41,29 @@
 
 @font-face {
     font-family: 'TamdanRegular';
-    src: url('/public/fonts/Barlow-Regular.ttf') format('ttf');
+    src: url('/fonts/Barlow-Regular.ttf') format('truetype');
     font-style: normal;
 }
 
 @font-face {
     font-family: 'TamdanBold';
-    src: url('/public/fonts/Barlow-Bold.ttf') format('ttf');
+    src: url('/fonts/Barlow-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'TamdanAddition';
+  src: url('/fonts/Aleo-Light.ttf') format('truetype');
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font: 24px TamdanRegular;
+  font: 16px TamdanRegular;
+}
+
+.font-tamdan-placeholder::placeholder {
+  font-family: TamdanRegular;
+  font-size: 16px;
 }
 
 .font-tamdan-bold {
@@ -63,4 +73,33 @@ body {
 .loader {
   border-radius: 50%;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-popIn {
+  animation: popIn 0.3s ease-out;
+}
+
 

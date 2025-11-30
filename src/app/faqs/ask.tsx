@@ -2,7 +2,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import GoogleSignInModal from "@/app/landing/googleButton";
+import GoogleSignInModal from "@/components/googleButton";
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
   const parts = jwt.split(".");
@@ -83,15 +83,15 @@ export default function AskSection() {
 
 
   return (
-    <div className=" space-y-[40px]">
+    <div className="space-y-6 sm:space-y-8 md:space-y-10">
       <div>
-        <p className="text-[36px]">Got something else you’d like to know?</p>
+        <p className="text-2xl sm:text-3xl md:text-4xl font-bold">Got something else you'd like to know?</p>
       </div>
       <div>
-        <p>Just ask TAMDAN — your AI assistant is always ready to answer.</p>
+        <p className="text-sm sm:text-base md:text-lg leading-relaxed">Just ask TAMDAN — your AI assistant is always ready to answer.</p>
       </div>
       <div>
-        <div className="w-full px-[90px]">
+        <div className="w-full max-w-4xl mx-auto">
           <form onSubmit={onSubmit}>
             <div className="relative">
               <textarea
@@ -99,13 +99,13 @@ export default function AskSection() {
                 onChange={(e) => setContent(e.target.value)}
                 rows={5}
                 placeholder="write your question here..."
-                className="w-full h-[320px] px-[35px] py-[30px] bg-white"
+                className="w-full h-56 sm:h-64 md:h-72 px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 bg-white pb-16 sm:pb-20"
               />
-              <div className="absolute bottom-4 right-4">
+              <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 md:bottom-4 md:right-4">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full md:w-[180px] cursor-pointer text-[16px] h-[39px] bg-primary-color text-white px-2 py-2 rounded-md hover:bg-primary-color disabled:opacity-60"
+                  className="text-xs sm:text-sm md:text-base h-8 sm:h-9 md:h-10 px-3 sm:px-4 md:px-5 cursor-pointer bg-primary-color text-white hover:bg-primary-color disabled:opacity-60 whitespace-nowrap"
                 >
                   {submitting ? "Submitting..." : "Submit"}
                 </button>

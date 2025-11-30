@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
+  const emailChange = req.nextUrl.searchParams.get("emailChange");
 
   if (!clientId) {
     return new Response("Missing GOOGLE_CLIENT_ID", { status: 500 });
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
     scope: "openid email profile",
     access_type: "offline",
     prompt: "consent",
+    state: emailChange === "true" ? "email_change" : "login",
   });
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;

@@ -1,7 +1,7 @@
 
-import Landing from "./landing/page";
+import InterestPage from "./interest/page";
 export default function Home() {
   return (
-    <Landing />
+    <InterestPage />
   );
 }
