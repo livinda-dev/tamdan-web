@@ -1,6 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronRightIcon } from "@heroicons/react/24/solid";
+import { decodeJwtPayload } from "@/lib/auth";
 
 type Article = {
   url: string;
@@ -26,7 +28,12 @@ type Props = {
 };
 
 export default function AuthExplorePage({ newsHeader, newsTopics }: Props) {
+  const router = useRouter();
+  const [idToken, setIdToken] = useState<string | null>(null);
+  const [savedContent, setSavedContent] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState<number[]>([0]);
+  const [content, setContent] = useState("");
 
   const toggle = (idx: number) => {
     setOpenSections((prev) =>
@@ -38,8 +45,105 @@ export default function AuthExplorePage({ newsHeader, newsTopics }: Props) {
     return null;
   }
 
+  const fetchEntries = async (token: string) => {
+    try {
+      const res = await fetch("/api/entries", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const json = await res.json();
+      if (json.ok) {
+        const dbContent = json.title || ""; // comma separated from DB
+        setSavedContent(dbContent);
+        if (dbContent) {
+          const withDashes = dbContent
+            .split(",")
+            .map((t: string) => `• ${t.trim()}`)
+            .join("\n");
+
+          setContent(withDashes);
+        } else {
+          setContent("");
+        }
+      } else {
+        setContent("");
+      }
+    } catch (e) {
+      console.error("Failed to fetch entries", e);
+      setContent("");
+    }
+  };
+  
+    useEffect(() => {
+      if (idToken) {
+        fetchEntries(idToken);
+      }
+    }, [idToken]);
+  
+    useEffect(() => {
+      try {
+        const raw = localStorage.getItem("session");
+        if (!raw) {
+          router.replace("/");
+          return;
+        }
+        const session = JSON.parse(raw) as { id_token?: string };
+        if (!session?.id_token) {
+          return;
+        }
+        setIdToken(session.id_token);
+        const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
+        setUserEmail(claims?.email ?? null);
+      } catch (e) {
+        console.error("Failed to read session", e);
+      }
+    }, [router]);
+
   return (
     <div className="min-h-screen px-4 sm:px-6 md:px-12 lg:px-[96px]">
+      <div className="mx-auto sm:w-[100%] md:w-[60%] lg:w-[50%]">
+        <form>
+          <div className="relative mt-4 sm:mt-6 md:mt-8">
+            <textarea
+              value={content}
+              disabled={true}
+              maxLength={200}
+              className="w-full h-64 sm:h-72 md:h-80 px-4 sm:px-6 md:px-9 py-4 sm:py-6 md:py-8 bg-white font-tamdan-placeholder leading-relaxed"
+              onChange={(e) => {
+                const value = e.target.value;
+
+                let lines = value.split("\n");
+
+                // Count only non-empty lines (ignore blank lines)
+                const nonEmptyCount = lines.filter(
+                  (l) => l.trim() !== ""
+                ).length;
+
+
+                const formatted = lines
+                  .map((line) => {
+                    // Allow blank lines normally
+                    if (line.trim() === "") return "";
+
+                    // Remove ONLY one leading bullet + optional space OR dash
+                    const withoutBullet = line.replace(/^[•\-]\s?/, "");
+
+                    // Limit each line to 50 characters
+                    const limited = withoutBullet.slice(0, 50);
+
+                    // Final line must always start with "• "
+                    return `• ${limited}`;
+                  })
+                  .join("\n");
+
+                setContent(formatted);
+              }}
+              rows={5}
+            />
+          </div>
+        </form>
+      </div>
       <div className="space-y-6 sm:space-y-8 md:space-y-10">
 
         {/* Header */}
