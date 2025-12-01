@@ -10,6 +10,7 @@ interface UserRow {
   phone: string | null;
   picture: string | null;
   created_at?: string;
+  chat_id?: string | null;
 }
 
 export default function ProfilePage() {
@@ -20,8 +21,9 @@ export default function ProfilePage() {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showChangeEmailPrompt, setShowChangeEmailPrompt] = useState(false);
-  const [changingEmail, setChangingEmail] = useState(false);
+  const [updatingBot, setUpdatingBot] = useState(false);
   const [currentIdToken, setCurrentIdToken] = useState<string | null>(null);
+  const [changingEmail, setChangingEmail] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -74,13 +76,83 @@ export default function ProfilePage() {
     setShowChangeEmailPrompt(false);
     setChangingEmail(true);
     localStorage.setItem("currentEmail", user?.email || "");
-    localStorage.setItem("currentIdToken",currentIdToken || "");
+    localStorage.setItem("currentIdToken", currentIdToken || "");
     // Redirect to Google OAuth with email change flag
     window.location.href = "/api/auth/google?emailChange=true";
   };
 
   const handleCancelChangeEmail = () => {
     setShowChangeEmailPrompt(false);
+  };
+
+  const handleBot = async () => {
+    if (!user) return;
+    if (user.chat_id != null) {
+      setUpdatingBot(true);
+      try {
+        const raw = localStorage.getItem("session");
+        if (!raw) throw new Error("No session");
+        const session = JSON.parse(raw);
+        const idToken = session.id_token;
+        if (!idToken) throw new Error("No id token");
+        const res = await fetch("/api/profile", {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ chat_id: null }),
+        });
+        const json = await res.json();
+        if (json.ok) {
+          setUser(json.user);
+        } else {
+          throw new Error(json.error || "Ulinking bot failed");
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown";
+        setStatusMsg(`Error: ${msg}`);
+      } finally {
+        setUpdatingBot(false);
+      }
+    } else{
+      try {
+      const sessionRaw = localStorage.getItem("session");
+      if (!sessionRaw) {
+        alert("Session expired. Please log in again.");
+        return;
+      }
+
+      const parsed = JSON.parse(sessionRaw) as { id_token?: string };
+      const idToken = parsed.id_token;
+
+      if (!idToken) {
+        alert("Session expired. Please log in again.");
+        return;
+      }
+
+      // Generate a one-time token for Telegram linking
+      const res = await fetch("/api/bots/generate-telegram-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (json.ok && json.token) {
+        // Use correct Telegram URL format (works on web and mobile)
+        window.open(`https://t.me/tamdanNewsBot?start=${json.token}`, '_blank');
+      } else {
+        alert("Failed to generate connection link. Please try again.");
+      }
+    } catch (error) {
+      console.error("Telegram connect error:", error);
+      alert("Failed to connect. Please try again.");
+    }
+    }
   };
 
   if (loading) {
@@ -110,7 +182,9 @@ export default function ProfilePage() {
         <div className="bg-white shadow-lg p-6 sm:p-8 space-y-6">
           {/* Username Section */}
           <div>
-            <label className="text-xs sm:text-sm text-gray-500 block mb-2">Username</label>
+            <label className="text-xs sm:text-sm text-gray-500 block mb-2">
+              Username
+            </label>
             <textarea
               className="w-full border-b-2 border-gray-300 focus:outline-none focus:border-blue-600 py-2 text-base sm:text-lg text-gray-900 resize-none px-0"
               value={editUsername}
@@ -149,10 +223,14 @@ export default function ProfilePage() {
                         throw new Error(json.error || "Update failed");
                       }
 
-                      setUser(json.user ?? { ...user, username: editUsername } as UserRow);
+                      setUser(
+                        json.user ??
+                          ({ ...user, username: editUsername } as UserRow)
+                      );
                       setStatusMsg("Saved");
                     } catch (err: unknown) {
-                      const msg = err instanceof Error ? err.message : "Unknown";
+                      const msg =
+                        err instanceof Error ? err.message : "Unknown";
                       setStatusMsg(`Error: ${msg}`);
                     } finally {
                       setSaving(false);
@@ -165,20 +243,50 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {statusMsg && <p className="mt-2 text-xs sm:text-sm text-gray-600">{statusMsg}</p>}
+            {statusMsg && (
+              <p className="mt-2 text-xs sm:text-sm text-gray-600">
+                {statusMsg}
+              </p>
+            )}
           </div>
 
           {/* Email Section */}
           <div>
-            <label className="text-xs sm:text-sm text-gray-500 block mb-2">Email</label>
+            <label className="text-xs sm:text-sm text-gray-500 block mb-2">
+              Email
+            </label>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <p className="text-base sm:text-lg text-gray-900">{user.email ?? "—"}</p>
+              <p className="text-base sm:text-lg text-gray-900">
+                {user.email ?? "—"}
+              </p>
               <button
                 onClick={handleChangeEmail}
                 disabled={changingEmail}
                 className="px-4 py-2  text-sm text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
               >
                 {changingEmail ? "Changing..." : "Change Email"}
+              </button>
+            </div>
+          </div>
+          {/* Telegram bots section */}
+          <div>
+            <label className="text-xs sm:text-sm text-gray-500 block mb-2">
+              Telegram bot
+            </label>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <p className="text-base sm:text-lg text-gray-900">
+                {user.chat_id ? "Linked" : "Not linked"}
+              </p>
+              <button
+                onClick={handleBot}
+                disabled={updatingBot}
+                className="px-4 py-2  text-sm text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+              >
+                {user.chat_id
+                  ? updatingBot
+                    ? "Unlinking..."
+                    : "Unlink Bot"
+                  : "Link Bot"}
               </button>
             </div>
           </div>
@@ -199,7 +307,9 @@ export default function ProfilePage() {
               Change Email
             </h3>
             <p className="text-gray-600 text-xs sm:text-sm mb-6 leading-relaxed">
-              To change your email, you need to log in via Google again. We will verify that the new email does not already exist in our system before updating your account.
+              To change your email, you need to log in via Google again. We will
+              verify that the new email does not already exist in our system
+              before updating your account.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -222,4 +332,7 @@ export default function ProfilePage() {
       )}
     </main>
   );
+}
+function setChangingEmail(arg0: boolean) {
+  throw new Error("Function not implemented.");
 }

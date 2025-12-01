@@ -30,7 +30,7 @@ export default function NoAuthExplorePage() {
               T
             </span>
             AMDAN is an intelligent AI-powered assistant designed to help you
-            explore the world of information effortlessly. Powered by GPT-5 and
+            explore the world of information effortlessly. Powered by AI and 
             n8n automation, TAMDAN connects to reliable news sources, analyzes
             fresh updates, and delivers the information that truly matters to
             you. Whether you are tracking breaking news, following specific
@@ -98,7 +98,7 @@ export default function NoAuthExplorePage() {
           <span className="font-bold">
             Step 2: Choose Your Notification Channel:
           </span>
-          Next, select how you would like to receive your updates. TAMDAN supports
+          Next, Email is already the default service that we will send the news to you, also you can connect with the Telegram chatbot by click on the profile that click on the connect to Telegram ChatBot. TAMDAN supports
           Telegram chatbot and Gmail, giving you the flexibility to stay
           informed in your preferred way. Telegram offers quick, conversational
           alerts through the chatbot, while Gmail provides a clean and organized

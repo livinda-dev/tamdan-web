@@ -25,9 +25,10 @@ type NewsHeader = {
 type Props = {
   newsHeader: NewsHeader;
   newsTopics: NewsTopic[];
+  topics_covered: string[];
 };
 
-export default function AuthExplorePage({ newsHeader, newsTopics }: Props) {
+export default function AuthExplorePage({ newsHeader, newsTopics,topics_covered }: Props) {
   const router = useRouter();
   const [idToken, setIdToken] = useState<string | null>(null);
   const [savedContent, setSavedContent] = useState<string | null>(null);
@@ -36,39 +37,57 @@ export default function AuthExplorePage({ newsHeader, newsTopics }: Props) {
   const [content, setContent] = useState("");
 
 
-  const fetchEntries = async (token: string) => {
-    try {
-      const res = await fetch("/api/entries", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const json = await res.json();
-      if (json.ok) {
-        const dbContent = json.title || ""; // comma separated from DB
-        setSavedContent(dbContent);
-        if (dbContent) {
-          const withDashes = dbContent
-            .split(",")
-            .map((t: string) => `• ${t.trim()}`)
-            .join("\n");
+  // const fetchEntries = async (token: string) => {
+  //   try {
+  //     const res = await fetch("/api/entries", {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+  //     const json = await res.json();
+  //     if (json.ok) {
+  //       const dbContent = json.title || ""; // comma separated from DB
+  //       setSavedContent(dbContent);
+  //       if (dbContent) {
+  //         const withDashes = dbContent
+  //           .split(",")
+  //           .map((t: string) => `• ${t.trim()}`)
+  //           .join("\n");
 
-          setContent(withDashes);
-        } else {
-          setContent("");
-        }
+  //         setContent(withDashes);
+  //       } else {
+  //         setContent("");
+  //       }
+  //     } else {
+  //       setContent("");
+  //     }
+  //   } catch (e) {
+  //     console.error("Failed to fetch entries", e);
+  //     setContent("");
+  //   }
+  // };
+
+  useEffect(() => {
+    if (topics_covered != null) {
+      const dbsContent = topics_covered.join(",");
+      setSavedContent(dbsContent);
+      if(dbsContent){
+        const withDashes = dbsContent
+          .split(",")
+          .map((t: string) => `• ${t.trim()}`)
+          .join("\n");
+
+        setContent(withDashes);
       } else {
         setContent("");
       }
-    } catch (e) {
-      console.error("Failed to fetch entries", e);
-      setContent("");
     }
-  };
+
+  })
   
     useEffect(() => {
       if (idToken) {
-        fetchEntries(idToken);
+        // fetchEntries(idToken);
       }
     }, [idToken]);
   

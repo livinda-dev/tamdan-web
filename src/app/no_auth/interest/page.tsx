@@ -146,7 +146,7 @@ export default function NoAuthLandingPage() {
               </span>
               AMDAN is an intelligent, AI-powered search companion designed to
               keep you informed and connected. Powered by advanced technologies
-              like GPT-5 and n8n automation, TAMDAN goes beyond ordinary search —
+              ncluding AI automation agents powered by n8n. TAMDAN goes beyond ordinary search —
               it gathers real-time news, analyzes trusted sources, and delivers
               personalized insights that matter to you.
             </p>

@@ -6,17 +6,17 @@ export default function Footer() {
       <div className="px-4 sm:px-6 md:px-12 lg:px-[120px]">
         {/* Contact Information */}
         <div className="mb-6 space-y-3">
-          <p className="font-[TamdanRegular] text-sm md:text-base">
-            <span className="font-[TamdanBold]">Address: </span>
-            <span className="block md:inline mt-1 md:mt-0">
+          <a href="https://maps.app.goo.gl/aKbjnkyvMnWQCgsT6" target="_blank" className="font-[TamdanRegular] text-sm md:text-base flex flex-col md:flex-row md:items-start gap-1 md:gap-0">
+            <strong className="font-[TamdanBold] flex-shrink-0">Address:</strong>
+            <span className="block md:inline">
               Bridge 2, National Road 6A, Sangkat Prek Leap, Khan Chroy Changva,
               Phnom Penh
             </span>
-          </p>
-          <p className="font-[TamdanRegular] text-sm md:text-base">
-            <span className="font-[TamdanBold]">Email: </span>
-            tamdan.cadt@gmail.com
-          </p>
+          </a>
+          <a href="mailto:tamdan.cadt@gmail.com" className="font-[TamdanRegular] text-sm md:text-base flex items-center gap-1">
+            <strong className="font-[TamdanBold] flex-shrink-0">Email:</strong>
+            <span>tamdan.cadt@gmail.com</span>
+          </a>
         </div>
 
         <Divider />
