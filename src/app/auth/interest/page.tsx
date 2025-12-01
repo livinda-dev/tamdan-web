@@ -67,28 +67,28 @@ export default function AuthInterestPage() {
     }
   };
 
-  const fetchNews  = async (token: string) => {
-    try {
-      const res = await fetch("/api/news", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const json = await res.json();
-      if (json.ok) {
-        console.log("Fetched news:", json);
-      } else {
-        console.error("Failed to fetch news:", json.error);
-      }
-    } catch (e) {
-      console.error("Failed to fetch news", e);
-    }
-  }
+  // const fetchNews  = async (token: string) => {
+  //   try {
+  //     const res = await fetch("/api/news", {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+  //     const json = await res.json();
+  //     if (json.ok) {
+  //       console.log("Fetched news:", json);
+  //     } else {
+  //       console.error("Failed to fetch news:", json.error);
+  //     }
+  //   } catch (e) {
+  //     console.error("Failed to fetch news", e);
+  //   }
+  // }
 
   useEffect(() => {
     if (idToken) {
       fetchEntries(idToken);
-      fetchNews(idToken);
+      // fetchNews(idToken);
     }
   }, [idToken]);
 
@@ -179,6 +179,9 @@ export default function AuthInterestPage() {
       } else {
         setStatus("Submitted successfully!");
         setSavedContent(arrayContent.join(","));
+        setAlertText("✅ Topics submitted successfully!");
+        setAlertStatus("success");
+        setIsAlertOpen(true);
       }
     } catch {
       setStatus("Network error");
@@ -197,17 +200,46 @@ export default function AuthInterestPage() {
           <div className="relative mt-4 sm:mt-6 md:mt-8">
             <textarea
               value={content}
-              maxLength={200}
+              maxLength={800}
               className="w-full h-64 sm:h-72 md:h-80 px-4 sm:px-6 md:px-9 py-4 sm:py-6 md:py-8 bg-white font-tamdan-placeholder leading-relaxed"
               onChange={(e) => {
                 const value = e.target.value;
 
-                let lines = value.split("\n");
+                // Split lines and strip any leading bullets/dashes for checking user input.
+                const rawLines = value.split("\n");
+                const strippedLines = rawLines.map((line) =>
+                  line.replace(/^[•\-]\s?/, "")
+                );
+
+                // Check for disallowed dot-like characters in the user's content
+                // after removing bullets we insert programmatically. This avoids
+                // flagging the `• ` we add ourselves when formatting lines.
+                const hasInvalidChar = strippedLines.some((line) =>
+                  /[·●◦.,]/.test(line)
+                );
+
+                // If user typed disallowed characters, notify and remove them
+                let cleanedLines = strippedLines.slice();
+                if (hasInvalidChar) {
+                  setAlertText(
+                    "Please avoid using dot characters like '·', '●', '◦', or '.' and ','. They have been removed."
+                  );
+                  setAlertStatus("error");
+                  setIsAlertOpen(true);
+
+                  cleanedLines = cleanedLines.map((l) =>
+                    l.replace(/[·•●◦.,]/g, "")
+                  );
+                }
+
+                // Rebuild lines preserving blank lines (use cleaned content for non-blank)
+                let lines = rawLines.map((orig, idx) =>
+                  orig.trim() === "" ? "" : cleanedLines[idx] ?? ""
+                );
 
                 // Count only non-empty lines (ignore blank lines)
-                const nonEmptyCount = lines.filter(
-                  (l) => l.trim() !== ""
-                ).length;
+                const nonEmptyCount = lines.filter((l) => l.trim() !== "")
+                  .length;
 
                 if (nonEmptyCount > 5) {
                   setAlertText("You can only submit up to 5 topics.");
@@ -231,11 +263,8 @@ export default function AuthInterestPage() {
                     // Allow blank lines normally
                     if (line.trim() === "") return "";
 
-                    // Remove ONLY one leading bullet + optional space OR dash
-                    const withoutBullet = line.replace(/^[•\-]\s?/, "");
-
-                    // Limit each line to 50 characters
-                    const limited = withoutBullet.slice(0, 50);
+                    // Limit each line to 150 characters
+                    const limited = line.slice(0, 150);
 
                     // Final line must always start with "• "
                     return `• ${limited}`;

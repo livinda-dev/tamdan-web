@@ -85,8 +85,9 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const username = typeof body?.username === "string" ? body.username.trim() : undefined;
     const secondaryEmail = typeof body?.secondary_email === "string" ? body.secondary_email.trim() : undefined;
+    const chatId = body?.chat_id;
 
-    if (username === undefined && secondaryEmail === undefined) {
+    if (username === undefined && secondaryEmail === undefined && chatId === undefined) {
       return Response.json({ ok: false, error: "Missing fields to update" }, { status: 400 });
     }
 
@@ -147,6 +148,8 @@ export async function PATCH(req: NextRequest) {
     const updates: Record<string, unknown> = {};
     if (username !== undefined) updates.username = username;
     if (secondaryEmail !== undefined) updates.secondary_email = secondaryEmail;
+    if (chatId !== undefined) updates.chat_id = chatId;
+
 
     // Update user by email
     const { data, error } = await supabase

@@ -5,6 +5,7 @@ export interface Article {
   article_title: string;
 }
 
+
 export interface NewsTopic {
   articles: Article[];
   section_title: string;
@@ -19,6 +20,11 @@ export interface NewsHeader {
   intro_paragraph: string;
 }
 
+export interface News{
+  newsHeader: NewsHeader;
+  newsTopics: NewsTopic[];
+}
+
 export interface NewsResponse {
   ok: boolean;
   newsletterId: number;
@@ -30,7 +36,7 @@ export const mockNewsData: NewsResponse = {
   ok: true,
   newsletterId: 2,
   newsHeader: {
-    edition_name: "Tamdan",
+    edition_name: "Tamdan Mock newsletter",
     subject_line: "Cambodia-Thailand Border, Stock Market Rally, AI Coding Tools Growth",
     delivery_date: "2025-11-26",
     topics_covered: [
@@ -38,7 +44,7 @@ export const mockNewsData: NewsResponse = {
       "Stock Market",
       "AI Coding Tools"
     ],
-    intro_paragraph: "Welcome to the latest edition of Tamdan. Today we cover important updates on the Cambodia-Thailand border situation, recent stock market rallies driven by Fed rate cut hopes, and the booming market for AI coding tools transforming software development."
+    intro_paragraph: "You do not have any new news updates for today yets. Here are some mock news articles covering recent events in Cambodia-Thailand border tensions, stock market rallies, and the growth of AI coding tools."
   },
   newsTopics: [
     {
