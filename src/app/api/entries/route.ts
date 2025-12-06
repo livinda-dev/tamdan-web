@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => null as unknown);
-    const content = (body?.content ?? "").toString().trim();
+    const content = Array.isArray(body?.content) ? body.content.join("\\n") : (body?.content ?? "").toString().trim();
     if (!content) {
       return Response.json({ ok: false, error: "Content is required" }, { status: 400 });
     }
