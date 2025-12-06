@@ -50,7 +50,7 @@ export default function AuthInterestPage() {
         setSavedContent(dbContent);
         if (dbContent) {
           const withDashes = dbContent
-            .split(",")
+            .split('\\n')
             .map((t: string) => `• ${t.trim()}`)
             .join("\n");
 
@@ -121,11 +121,12 @@ export default function AuthInterestPage() {
       return;
     }
 
-    // Convert textarea into array
-    const arrayContent = content
-      .split("\n")
-      .map((line) => line.replace(/^. /, "").trim())
-      .filter((line) => line.length > 0);
+   const arrayContent = content
+  .split("\n")
+  .map((line) => line.replace(/^•\s*/, "").trim())
+  .filter((line) => line.length > 0);
+
+
 
     // ❌ Block if more than 5 topics
     if (arrayContent.length > 5) {
@@ -178,7 +179,7 @@ export default function AuthInterestPage() {
         setStatus(json.error || "Failed to submit");
       } else {
         setStatus("Submitted successfully!");
-        setSavedContent(arrayContent.join(","));
+        setSavedContent(arrayContent.join("\n"));
         setAlertText("✅ Topics submitted successfully!");
         setAlertStatus("success");
         setIsAlertOpen(true);
