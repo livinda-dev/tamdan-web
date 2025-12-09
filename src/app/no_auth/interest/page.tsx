@@ -30,15 +30,15 @@ export default function NoAuthLandingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 sm:px-6">
+    <div className="min-h-screen flex flex-col items-center">
       {/* Title */}
-      <div className="max-w-4xl w-full">
-        <p className="text-color text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl font-[TamdanRegular] mt-4 sm:mt-6">
+      <div className="max-w-6xl w-full">
+        <p className="text-color text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl font-[TamdanRegular] sm:mt-6">
           Discover smarter searching with{" "}
           <span className="font-bold primary-color text-lg sm:text-xl md:text-2xl lg:text-3xl">TAMDAN</span>
         </p>
         {/* Subtitle */}
-        <p className="text-color text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl font-[TamdanRegular] mt-4 mb-8 sm:mb-10">
+        <p className="text-color text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl font-[TamdanRegular] mb-8 sm:mb-10">
           an AI-powered agent that understands you better every time.
         </p>
 
@@ -129,19 +129,19 @@ export default function NoAuthLandingPage() {
           <div className="flex justify-center mt-2 sm:mt-3">
             {status && <span className="text-xs sm:text-sm text-gray-700">{status}</span>}
           </div>
-          <p className="text-xs sm:text-sm md:text-base text-color mb-6 text-center font-[TamdanAddition] mt-2 sm:mt-3">
+          <p className="text-xs sm:text-sm md:text-base text-color mb-6 text-center font-[TamdanAddition] mt-1 sm:mt-3">
             Find Better. Faster. With TAMDAN.
           </p>
         </div>
       </div>
 
       {/* Features Section */}
-      <div className="w-full bg-[#EFF0EC] px-4 sm:px-6 md:px-12 lg:px-[120px] py-8 sm:py-10 md:py-12 mt-8 sm:mt-12 md:mt-16">
-        <div className="max-w-4xl mx-auto">
+      <div className="w-full bg-[#EFF0EC] py-8 sm:py-10 md:py-12 mt-8 sm:mt-12 md:mt-16">
+        <div className="max-w-7xl mx-auto">
           {/* About TAMDAN */}
           <div>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed font-normal text-[#1A1A1A]">
-              <span className="float-left text-4xl sm:text-5xl md:text-6xl font-[TamdanBold] leading-[0.8] mr-2 sm:mr-3 mt-1">
+              <span className="float-left text-5xl sm:text-6xl md:text-7xl font-bold leading-[0.8] mr-2 sm:mr-3 mt-1">
                 T
               </span>
               AMDAN is an intelligent, AI-powered search companion designed to
@@ -162,7 +162,7 @@ export default function NoAuthLandingPage() {
           </div>
 
           {/* Feature Cards */}
-          <div className="flex flex-col sm:flex-col lg:flex-row justify-between gap-4 sm:gap-6 md:gap-8 mt-6 sm:mt-8 md:mt-10">
+          <div className="flex flex-col sm:flex-col lg:flex-row justify-between gap-4 sm:gap-6 md:gap-8 mt-6 sm:mt-8 md:mt-10 px-24">
             <div className="flex items-center space-x-3 bg-white px-4 sm:px-6 py-4 sm:py-6 w-full lg:w-auto">
               <img
                 src="/image/telegram.png"
