@@ -194,9 +194,13 @@ export default function AuthInterestPage() {
   return (
     <div className="min-h-screen flex flex-col items-center px-4 sm:px-6 sm:justify-center md:justify-start">
       <div className="w-full max-w-2xl">
+        <h2 className="text-lg sm:text-xl md:text-2xl text-gray-700 pt-2 text-center">
+          Your Daily Personalized Newsletter.
+        </h2>
         <p className="text-xs sm:text-sm md:text-base text-color pt-6 sm:pt-8 md:pt-10 text-center">
           _____Write your interests here_____
         </p>
+        
         <form onSubmit={onSubmit}>
           <div className="relative mt-4 sm:mt-6 md:mt-8">
             <textarea

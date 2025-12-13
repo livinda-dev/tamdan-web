@@ -1,9 +1,13 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAi = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY!);
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+if (!OPENROUTER_API_KEY) {
+  throw new Error("OPENROUTER_API_KEY is not defined in the environment variables");
+}
+
 
 const SYSTEM_PROMPT = `
 You are a strict content moderation and input validation engine.
@@ -60,17 +64,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing topic" }, { status: 400 });
     }
 
-    const model = genAi.getGenerativeModel({
-      model: "models/gemini-2.5-flash",
-      generationConfig: { temperature: 0 }
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "model": "google/gemini-2.5-flash",
+        "messages": [
+          { "role": "system", "content": SYSTEM_PROMPT },
+          { "role": "user", "content": `Topic: "${topic}"` }
+        ],
+        "temperature": 0
+      })
     });
 
-    const result = await model.generateContent([
-      SYSTEM_PROMPT,
-      `Topic: "${topic}"`
-    ]);
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("OpenRouter API Error:", errorBody);
+      return NextResponse.json({ error: "Failed to fetch from OpenRouter API", details: errorBody }, { status: response.status });
+    }
 
-    const raw = result.response.text().trim();
+    const result = await response.json();
+    const raw = result.choices[0].message.content.trim();
 
     // Try 1 → Pure JSON
     try {

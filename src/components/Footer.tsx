@@ -1,8 +1,9 @@
 import Divider from "@/components/divider";
+import MyMarquee from "./marquee";
 
 export default function Footer() {
   return (
-    <footer className="bg-primary-color text-white py-6 md:py-8 lg:py-10">
+    <footer className="bg-primary-color text-white pt-6 md:pt-8 lg:pt-10">
       <div className="px-4 sm:px-6 md:px-12 lg:px-[120px]">
         {/* Contact Information */}
         <div className="mb-6 space-y-3">
@@ -34,6 +35,7 @@ export default function Footer() {
           </p>
         </div>
       </div>
+      <MyMarquee/>
     </footer>
   );
 }
