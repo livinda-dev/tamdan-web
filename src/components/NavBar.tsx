@@ -141,7 +141,7 @@ export default function NavBar() {
 
       if (json.ok && json.token) {
         // Use correct Telegram URL format (works on web and mobile)
-        window.open(`https://t.me/tamdanNewsBot?start=${json.token}`, '_blank');
+        window.open(`https://t.me/tamdanNewsBot?start=${json.token}`, "_blank");
         setIsDropdownOpen(false);
       } else {
         alert("Failed to generate connection link. Please try again.");
@@ -177,20 +177,25 @@ export default function NavBar() {
       <div className="px-4 sm:px-6 md:px-12 lg:px-[120px]">
         <div className="flex h-14 md:h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center flex-shrink-0">
+          <div className="flex flex-shrink-0">
             <img
               src="/image/LogoTamdan.png"
               alt="Logo"
-              className="h-6 md:h-8 w-auto"
+              className="h-4 md:h-7 w-auto"
             />
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex">
-            <div className="ml-6 lg:ml-10 flex items-baseline space-x-2 lg:space-x-4">
+          {/* Desktop Navigation - Centered */}
+          <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2">
+            <div className="flex items-baseline space-x-2 lg:space-x-4">
               <Link href="/interest" className={linkClass("/interest")}>
                 INTERESTS
               </Link>
+              {isLoggedIn && (
+                <Link href="/edition" className={linkClass("/edition")}>
+                  EDITION
+                </Link>
+              )}
               <Link href="/explore" className={linkClass("/explore")}>
                 EXPLORES
               </Link>
@@ -209,7 +214,7 @@ export default function NavBar() {
                   className="flex items-center justify-center"
                 >
                   <p className="text-black cursor-pointer font-bold text-sm">
-                    PROFILE
+                    PROFILE.
                   </p>
                 </button>
                 {isDropdownOpen && (
@@ -251,13 +256,7 @@ export default function NavBar() {
                   onClick={handleOpenGoogle}
                   className="bg-primary-color text-white px-2 md:px-3 py-2 text-xs md:text-sm cursor-pointer whitespace-nowrap"
                 >
-                  SIGN UP
-                </button>
-                <button
-                  onClick={handleOpenGoogle}
-                  className="text-color px-2 md:px-3 py-2 text-xs md:text-sm font-bold cursor-pointer whitespace-nowrap"
-                >
-                  LOGIN
+                  GET STARTED
                 </button>
               </div>
             )}
@@ -267,6 +266,7 @@ export default function NavBar() {
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden inline-flex items-center justify-center p-2 rounded-md"
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           >
             <svg
               className="h-6 w-6 text-color"
@@ -296,13 +296,30 @@ export default function NavBar() {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden pb-3 space-y-1">
-            <Link href="/interest" className="block px-3 py-2 rounded-md text-sm font-medium text-color">
+            <Link
+              href="/interest"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-color"
+            >
               INTERESTS
             </Link>
-            <Link href="/explore" className="block px-3 py-2 rounded-md text-sm font-medium text-color">
+            {isLoggedIn && (
+              <Link
+                href="/edition"
+                className="block px-3 py-2 rounded-md text-sm font-medium text-color"
+              >
+                EDITION
+              </Link>
+            )}
+            <Link
+              href="/explore"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-color"
+            >
               EXPLORES
             </Link>
-            <Link href="/faqs" className="block px-3 py-2 rounded-md text-sm font-medium text-color">
+            <Link
+              href="/faqs"
+              className="block px-3 py-2 rounded-md text-sm font-medium text-color"
+            >
               FAQs
             </Link>
             {isLoggedIn ? (
@@ -314,7 +331,7 @@ export default function NavBar() {
                   }}
                   className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
                 >
-                  PROFILE
+                  PROFILE.
                 </button>
                 <button
                   onClick={() => {
@@ -344,16 +361,7 @@ export default function NavBar() {
                   }}
                   className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium bg-primary-color text-white"
                 >
-                  SIGN UP
-                </button>
-                <button
-                  onClick={() => {
-                    handleOpenGoogle();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
-                >
-                  LOGIN
+                  GET STARTED
                 </button>
               </>
             )}

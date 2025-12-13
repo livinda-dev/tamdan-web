@@ -99,9 +99,6 @@ export default function ExplorePage() {
     <div>
       {idToken != null ? (
         <>
-          <div className="flex items-center justify-center mb-4">
-            <DateNavigator currentDate={currentDate} onDateChange={onDateChange} />
-          </div>
           {loading ? (
             <div className="min-h-screen flex flex-col items-center justify-center">
               <div className="flex gap-2">

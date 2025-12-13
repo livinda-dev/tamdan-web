@@ -17,7 +17,7 @@ export interface NewsHeader {
   subject_line: string;
   delivery_date: string;
   topics_covered: string[];
-  intro_paragraph: string;
+  // intro_paragraph: string;
 }
 
 export interface News{
@@ -44,7 +44,7 @@ export const mockNewsData: NewsResponse = {
       "Stock Market",
       "AI Coding Tools"
     ],
-    intro_paragraph: "You do not have any new news updates for today yets. Here are some mock news articles covering recent events in Cambodia-Thailand border tensions, stock market rallies, and the growth of AI coding tools."
+    // intro_paragraph: "You do not have any new news updates for today yets. Here are some mock news articles covering recent events in Cambodia-Thailand border tensions, stock market rallies, and the growth of AI coding tools."
   },
   newsTopics: [
     {

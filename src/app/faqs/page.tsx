@@ -9,7 +9,7 @@ export default function FaqsPage() {
         <div className="space-y-6 sm:space-y-8">
           <p className="items-center text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
             Quick Start -- Frequently Asked Question of
-            <span className="primary-color font-tamdan-bold"> TAMDAN</span>
+            <span className="primary-color font-bold"> TAMDAN</span>
           </p>
           <p className="text-sm sm:text-base md:text-lg leading-relaxed">
             You have entered the FAQ Path — where TAMDAN answers all your

@@ -16,7 +16,7 @@ export default function NoAuthExplorePage() {
         <div>
           <p className="items-center text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
             Explore Path — Your Journey with
-            <span className="primary-color font-tamdan-bold">
+            <span className="primary-color font-bold">
               {" "}
               TAMDAN
             </span>
