@@ -57,23 +57,17 @@ export async function GET(req: NextRequest) {
             return Response.json({ ok: false, error: "User not found in database. Please sign out and sign in again." }, { status: 404 });
         }
 
-        const date = req.nextUrl.searchParams.get("date");
-        if (!date) {
-            return Response.json({ ok: false, error: "Missing 'date' query parameter" }, { status: 400 });
-        }
-
-        const {data: newsRow, error: newsErr } = await supabase
+        const {data: newsRows, error: newsErr } = await supabase
             .from("user_newsletter")
             .select("id, header,topics,user_id")
-            .eq("user_id", userRow.id)
-            .filter("header->delivery_date", "eq", `"${date}"`)
-            .maybeSingle();
+            .eq("user_id", userRow.id);
+
         if (newsErr) {
             console.error("[News API] lookup newsletters error:", newsErr.message);
             return Response.json({ ok: false, error: newsErr.message }, { status: 502 });
         }
 
-        return Response.json({ ok: true, newsletterId: newsRow?.id || null,newsHeader: newsRow?.header || null,newsTopics: newsRow?.topics || null });
+        return Response.json({ ok: true, newsletters: newsRows || [] });
 
     } catch (e:unknown) {
         const message = e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";

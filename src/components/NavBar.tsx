@@ -191,6 +191,11 @@ export default function NavBar() {
               <Link href="/interest" className={linkClass("/interest")}>
                 INTERESTS
               </Link>
+              {isLoggedIn && (
+                <Link href="/edition" className={linkClass("/edition")}>
+                  EDITION
+                </Link>
+              )}
               <Link href="/explore" className={linkClass("/explore")}>
                 EXPLORES
               </Link>
@@ -251,13 +256,7 @@ export default function NavBar() {
                   onClick={handleOpenGoogle}
                   className="bg-primary-color text-white px-2 md:px-3 py-2 text-xs md:text-sm cursor-pointer whitespace-nowrap"
                 >
-                  SIGN UP
-                </button>
-                <button
-                  onClick={handleOpenGoogle}
-                  className="text-color px-2 md:px-3 py-2 text-xs md:text-sm font-bold cursor-pointer whitespace-nowrap"
-                >
-                  LOGIN
+                  GET STARTED
                 </button>
               </div>
             )}
@@ -303,6 +302,14 @@ export default function NavBar() {
             >
               INTERESTS
             </Link>
+            {isLoggedIn && (
+              <Link
+                href="/edition"
+                className="block px-3 py-2 rounded-md text-sm font-medium text-color"
+              >
+                EDITION
+              </Link>
+            )}
             <Link
               href="/explore"
               className="block px-3 py-2 rounded-md text-sm font-medium text-color"
@@ -354,16 +361,7 @@ export default function NavBar() {
                   }}
                   className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium bg-primary-color text-white"
                 >
-                  SIGN UP
-                </button>
-                <button
-                  onClick={() => {
-                    handleOpenGoogle();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
-                >
-                  LOGIN
+                  GET STARTED
                 </button>
               </>
             )}
