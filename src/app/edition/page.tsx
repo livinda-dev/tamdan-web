@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { decodeJwtPayload } from "@/lib/auth";
 import NewsModal from "@/components/NewsModal";
 
@@ -10,6 +10,7 @@ type Article = {
   summary: string;
   source_name: string;
   article_title: string;
+  image:string;
 };
 
 type NewsTopic = {
@@ -31,6 +32,7 @@ type Newsletter = {
 
 export default function EditionPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [idToken, setIdToken] = useState<string | null>(null);
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +79,13 @@ export default function EditionPage() {
       fetchNews(idToken);
     }
   }, [idToken]);
+
+  useEffect(() => {
+    const start = searchParams.get('startDate');
+    const end = searchParams.get('endDate');
+    if (start) setStartDate(start);
+    if (end) setEndDate(end);
+  }, [searchParams]);
 
   useEffect(() => {
     try {

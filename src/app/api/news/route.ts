@@ -57,9 +57,12 @@ export async function GET(req: NextRequest) {
             return Response.json({ ok: false, error: "User not found in database. Please sign out and sign in again." }, { status: 404 });
         }
 
+        const date = req.nextUrl.searchParams.get("date") || undefined;
+
         const {data: newsRows, error: newsErr } = await supabase
             .from("user_newsletter")
             .select("id, header,topics,user_id")
+            .order("created_at", { ascending: false })
             .eq("user_id", userRow.id);
 
         if (newsErr) {

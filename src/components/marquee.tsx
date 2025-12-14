@@ -24,19 +24,23 @@ export default function MyMarquee() {
       const [newsTopics, setNewsTopics] = useState<NewsTopic[]>([]);
       const [loading, setLoading] = useState(true);
       const [currentDate,setCurrentDate] = useState<string>(`${new Date().toISOString().split('T')[0]}`);
+      const [lastTwoDays,setLastTwoDays] = useState<string>(`${new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}`);
+      const [yesterday,setYesterday] = useState<string>(`${new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}`);
 
     const fetchNews  = async (token: string,) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/news?date=${currentDate}`, {
+      const res = await fetch(`/api/news`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       const json = await res.json();
-
+      const lastTwoDaysNews = json?.newsletters?.filter((nl: any) => nl.header?.delivery_date == lastTwoDays);
+      const yesterdayNews = json?.newsletters?.filter((nl: any) => nl.header?.delivery_date == yesterday);
+      const todayNews = json?.newsletters?.filter((nl: any) => nl.header?.delivery_date == currentDate);
       if (json.ok) {
-        setNewsTopics(json.newsTopics || []);
+        setNewsTopics(lastTwoDaysNews[0]?.topics || []);
       } else {
         console.error("Failed to fetch news:", json.error);
       }
@@ -71,19 +75,21 @@ export default function MyMarquee() {
 
       console.log("Marquee News Topics:", newsTopics?.map(topic => topic.section_summary).join(", "));
   return (
-    <Marquee  
-        className="
-        background-color text-black py-2 px-4 text-sm md:text-base lg:text-lg mt-4  
-        "
-    direction="left" speed={40}  pauseOnHover gradient={false}>
-       {
-        newsTopics.map((topic, index) => (
-          <span key={index} className="mx-8">
-            <strong>🚀{topic.section_title}:</strong> {topic.section_summary}
-          </span>
-        ))
-      }
-    </Marquee>
+    <div onClick={() => router.push(`/edition?startDate=${lastTwoDays}&endDate=${lastTwoDays}`)}>
+      <Marquee  
+          className="
+          background-color text-black py-2 px-4 text-sm md:text-base lg:text-lg mt-4  
+          "
+      direction="left" speed={40}  pauseOnHover gradient={false}>
+         {
+          newsTopics.map((topic, index) => (
+            <span key={index} className="mx-8">
+              <strong>🚀{topic.section_title}:</strong> {topic.section_summary}
+            </span>
+          ))
+        }
+      </Marquee>
+    </div>
   );
 
 
