@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { decodeJwtPayload } from "@/lib/auth";
 import NewsModal from "@/components/NewsModal";
 
+export const dynamic = 'force-dynamic';
+
 // Define the types for the news data
 type Article = {
   url: string;
