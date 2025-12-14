@@ -17,6 +17,14 @@ type NewsTopic = {
   articles: Article[];
 };
 
+type Newsletter = {
+  header: {
+    delivery_date: string;
+  };
+  topics: NewsTopic[];
+};
+
+
 export default function MyMarquee() {
 
     const router = useRouter();
@@ -36,11 +44,14 @@ export default function MyMarquee() {
         },
       });
       const json = await res.json();
-      const lastTwoDaysNews = json?.newsletters?.filter((nl: any) => nl.header?.delivery_date == lastTwoDays);
-      const yesterdayNews = json?.newsletters?.filter((nl: any) => nl.header?.delivery_date == yesterday);
-      const todayNews = json?.newsletters?.filter((nl: any) => nl.header?.delivery_date == currentDate);
+      const lastTwoDaysNews: Newsletter[] =
+  (json?.newsletters as Newsletter[] | undefined)?.filter(
+    nl => nl.header?.delivery_date >= lastTwoDays
+  ) ?? [];
+
+      console.log("Fetched news for last two days:", lastTwoDaysNews);
       if (json.ok) {
-        setNewsTopics(lastTwoDaysNews[0]?.topics || []);
+        setNewsTopics(lastTwoDaysNews.flatMap(nl => nl.topics) || []);
       } else {
         console.error("Failed to fetch news:", json.error);
       }
@@ -74,7 +85,7 @@ export default function MyMarquee() {
       }, [router]);
 
   return (
-    <div onClick={() => router.push(`/edition?startDate=${lastTwoDays}&endDate=${lastTwoDays}`)}>
+    <div onClick={() => router.push(`/edition?startDate=${lastTwoDays}&endDate=${currentDate}`)}>
       <Marquee  
           className="
           background-color text-black py-2 px-4 text-sm md:text-base lg:text-lg mt-4  
