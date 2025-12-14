@@ -6,6 +6,7 @@ type Article = {
   summary: string;
   source_name: string;
   article_title: string;
+  image:string;
 };
 
 type NewsTopic = {
@@ -54,6 +55,7 @@ export default function NewsModal({ topic, onClose }: Props) {
           {topic.articles.map((article, index) => (
             <div key={index} className="border-t pt-4">
               <h3 className="font-semibold text-lg">{article.article_title}</h3>
+              {article.image && <img src={article.image} alt={article.article_title} className="w-full h-auto mt-2 mb-2"/>}
               <p className="text-sm text-gray-500 mt-1">
                 Source: {article.source_name}
               </p>
@@ -62,7 +64,8 @@ export default function NewsModal({ topic, onClose }: Props) {
                 href={article.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-color hover:underline mt-2 inline-block"
+                className="text-primary-color hover:underline mt-2 inline-block underline text-blue-600"
+                
               >
                 Read Full Article
               </a>
