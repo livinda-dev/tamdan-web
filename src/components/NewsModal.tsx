@@ -64,7 +64,8 @@ export default function NewsModal({ topic, onClose }: Props) {
                 href={article.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-color hover:underline mt-2 inline-block"
+                className="text-primary-color hover:underline mt-2 inline-block underline text-blue-600"
+                
               >
                 Read Full Article
               </a>
