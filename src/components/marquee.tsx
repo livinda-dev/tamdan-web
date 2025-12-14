@@ -73,7 +73,6 @@ export default function MyMarquee() {
         }
       }, [router]);
 
-      console.log("Marquee News Topics:", newsTopics?.map(topic => topic.section_summary).join(", "));
   return (
     <div onClick={() => router.push(`/edition?startDate=${lastTwoDays}&endDate=${lastTwoDays}`)}>
       <Marquee  
