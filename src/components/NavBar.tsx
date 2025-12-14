@@ -31,6 +31,7 @@ export default function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [userChatId, setUserChatId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleOpenGoogle = () => {
@@ -75,6 +76,7 @@ export default function NavBar() {
 
         if (json?.ok && json.user) {
           setUserEmail(json.user.email ?? null);
+          setUserChatId(json.user.chat_id ?? null);
           // prefer username from DB; fall back to name claim
           const nameFromJwt =
             decodeJwtPayload<{ name?: string }>(idToken)?.name ?? null;
@@ -234,12 +236,21 @@ export default function NavBar() {
                       </p>
                     </div>
                     <div className="border-t border-gray-100"></div>
-                    <button
-                      onClick={handleTelegramConnect}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                    >
-                      Connect with telegram
-                    </button>
+                    {userChatId ? (
+                      <button
+                        onClick={handleTelegramConnect}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      >
+                        Go to Telegram Bot
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleTelegramConnect}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      >
+                        Connect with telegram
+                      </button>
+                    )}
                     <div className="border-t border-gray-100"></div>
                     <button
                       onClick={logout}
@@ -333,7 +344,19 @@ export default function NavBar() {
                 >
                   PROFILE.
                 </button>
-                <button
+                {
+                  userChatId ? (
+                    <button
+                  onClick={() => {
+                    handleTelegramConnect();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
+                >
+                  Go to Telegram Bot
+                </button>
+                  ):(
+                    <button
                   onClick={() => {
                     handleTelegramConnect();
                     setIsMobileMenuOpen(false);
@@ -342,6 +365,8 @@ export default function NavBar() {
                 >
                   Connect Telegram
                 </button>
+                  )
+                }
                 <button
                   onClick={() => {
                     logout();
