@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/alert";
+import { useRef } from "react";
+
 import GenerateAgentButton from "@/components/GenerateAgentButton";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
@@ -36,6 +38,7 @@ export default function AuthInterestPage() {
   const [alertStatus, setAlertStatus] = useState<"error" | "success" | "info">(
     "info"
   );
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const fetchEntries = async (token: string) => {
     try {
@@ -50,7 +53,7 @@ export default function AuthInterestPage() {
         setSavedContent(dbContent);
         if (dbContent) {
           const withDashes = dbContent
-            .split('\\n')
+            .split("\\n")
             .map((t: string) => `• ${t.trim()}`)
             .join("\n");
 
@@ -121,12 +124,10 @@ export default function AuthInterestPage() {
       return;
     }
 
-   const arrayContent = content
-  .split("\n")
-  .map((line) => line.replace(/^•\s*/, "").trim())
-  .filter((line) => line.length > 0);
-
-
+    const arrayContent = content
+      .split("\n")
+      .map((line) => line.replace(/^•\s*/, "").trim())
+      .filter((line) => line.length > 0);
 
     // ❌ Block if more than 5 topics
     if (arrayContent.length > 5) {
@@ -200,31 +201,36 @@ export default function AuthInterestPage() {
         <p className="text-xs sm:text-sm md:text-base text-color pt-6 sm:pt-8 md:pt-10 text-center">
           _____Write your interests here_____
         </p>
-        
+
         <form onSubmit={onSubmit}>
           <div className="relative mt-4 sm:mt-6 md:mt-8">
             <textarea
+              disabled={isALertOpen}
+              ref={textareaRef}
               value={content}
               maxLength={800}
               className="w-full h-64 sm:h-72 md:h-80 px-4 sm:px-6 md:px-9 py-4 sm:py-6 md:py-8 bg-white font-tamdan-placeholder leading-relaxed"
               onChange={(e) => {
+                if (isALertOpen) return;
+                const textarea = textareaRef.current;
+                if (!textarea) return;
+
+                const cursorStart = textarea.selectionStart;
+                const cursorEnd = textarea.selectionEnd;
+
                 const value = e.target.value;
 
-                // Split lines and strip any leading bullets/dashes for checking user input.
                 const rawLines = value.split("\n");
                 const strippedLines = rawLines.map((line) =>
                   line.replace(/^[•\-]\s?/, "")
                 );
 
-                // Check for disallowed dot-like characters in the user's content
-                // after removing bullets we insert programmatically. This avoids
-                // flagging the `• ` we add ourselves when formatting lines.
+                let cleanedLines = strippedLines.slice();
+
                 const hasInvalidChar = strippedLines.some((line) =>
                   /[·●◦.,]/.test(line)
                 );
 
-                // If user typed disallowed characters, notify and remove them
-                let cleanedLines = strippedLines.slice();
                 if (hasInvalidChar) {
                   setAlertText(
                     "Please avoid using dot characters like '·', '●', '◦', or '.' and ','. They have been removed."
@@ -233,50 +239,52 @@ export default function AuthInterestPage() {
                   setIsAlertOpen(true);
 
                   cleanedLines = cleanedLines.map((l) =>
-                    l.replace(/[·•●◦.,]/g, "")
+                    l.replace(/[·●◦.,]/g, "")
                   );
                 }
 
-                // Rebuild lines preserving blank lines (use cleaned content for non-blank)
                 let lines = rawLines.map((orig, idx) =>
                   orig.trim() === "" ? "" : cleanedLines[idx] ?? ""
                 );
 
-                // Count only non-empty lines (ignore blank lines)
-                const nonEmptyCount = lines.filter((l) => l.trim() !== "")
-                  .length;
+                const nonEmptyCount = lines.filter(
+                  (l) => l.trim() !== ""
+                ).length;
 
                 if (nonEmptyCount > 5) {
                   setAlertText("You can only submit up to 5 topics.");
                   setAlertStatus("error");
                   setIsAlertOpen(true);
 
-                  // keep only first 5 non-empty lines, but allow blank lines
-                  let count = 0;
-                  lines = lines.filter((line) => {
-                    if (line.trim() === "") return true;
-                    if (count < 5) {
-                      count++;
-                      return true;
-                    }
-                    return false;
+                  // ❗ DO NOT change content at all
+                  requestAnimationFrame(() => {
+                    textarea.selectionStart = cursorStart;
+                    textarea.selectionEnd = cursorStart;
                   });
+
+                  return; // ⛔ stop processing
                 }
 
                 const formatted = lines
                   .map((line) => {
-                    // Allow blank lines normally
                     if (line.trim() === "") return "";
-
-                    // Limit each line to 150 characters
-                    const limited = line.slice(0, 150);
-
-                    // Final line must always start with "• "
-                    return `• ${limited}`;
+                    return `• ${line.slice(0, 150)}`;
                   })
                   .join("\n");
 
                 setContent(formatted);
+
+                // ✅ Restore cursor AFTER render
+                requestAnimationFrame(() => {
+                  const newLength = formatted.length;
+                  const oldLength = value.length;
+                  const diff = newLength - oldLength;
+
+                  const newCursor = Math.max(0, cursorStart + diff);
+
+                  textarea.selectionStart = newCursor;
+                  textarea.selectionEnd = newCursor;
+                });
               }}
               rows={5}
               placeholder={
@@ -292,7 +300,9 @@ export default function AuthInterestPage() {
           </div>
         </form>
         <div className="flex justify-center mt-2 sm:mt-3 md:mt-4">
-          {status && <span className="text-xs sm:text-sm text-gray-700">{status}</span>}
+          {status && (
+            <span className="text-xs sm:text-sm text-gray-700">{status}</span>
+          )}
         </div>
         <p className="text-xs sm:text-sm md:text-base text-color text-center font-[TamdanAddition] mt-2 sm:mt-3 md:mt-4">
           Find Better. Faster. With TAMDAN.
@@ -304,7 +314,7 @@ export default function AuthInterestPage() {
         isOpen={isALertOpen}
         onClose={() => setIsAlertOpen(false)}
       />
-      
+
       {submitting && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
           <div className="min-h-screen flex flex-col items-center justify-center">
