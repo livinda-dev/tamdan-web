@@ -50,6 +50,14 @@ Mark UNSAFE if:
 • only repeated letters  
 • meaningless fragments ("ok", "hi", "lol", "hmm")
 
+--- INCORRECT-TEXT
+Mark UNSAFE if input is mostly wrong or that word is wrong a lot
+• the wrong word like ("bankahda","accidentald","blokchain")
+• only emojis  
+• only symbols  
+• only repeated letters  
+• meaningless fragments ("ok", "hi", "lol", "hmm")
+
 You MUST respond only in JSON:
 {
   "status": "SAFE" | "UNSAFE",
