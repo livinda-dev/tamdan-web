@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { decodeJwtPayload } from "@/lib/auth";
 import NewsModal from "@/components/NewsModal";
+import Divider from "@/components/divider";
 
 // Define the types for the news data
 type Article = {
@@ -22,6 +23,7 @@ type NewsTopic = {
 type NewsHeader = {
   delivery_date: string;
   topics_covered: string[];
+  intro_paragraph: string;
 };
 
 type Newsletter = {
@@ -189,33 +191,43 @@ export default function EditionPage() {
         </div>
       ) : filteredNewsletters && filteredNewsletters.length > 0 ? (
         <div className="space-y-12">
-          {filteredNewsletters.map((newsletter) => (
-            <div key={newsletter.id}>
-              <div className="mb-8">
-                <h2 className="text-2xl font-semibold">
-                  Edition for: {newsletter.header.delivery_date}
-                </h2>
-                {newsletter.header.topics_covered && (
-                  <p className="text-gray-600">
-                    Topics covered: {newsletter.header.topics_covered.join(", ")}
-                  </p>
-                )}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {newsletter.topics.map((topic, index) => (
-                  <div
-                    key={index}
-                    className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => openModal(topic)}
-                  >
-                    <h3 className="font-bold text-xl mb-2">{topic.section_title}</h3>
-                    <p className="text-gray-700">
-                      {topic.section_summary.substring(0, 150)}...
+          {filteredNewsletters.map((newsletter, index) => (
+            <React.Fragment key={newsletter.id}>
+              <div>
+                <div className="mb-8">
+                  <h2 className="text-2xl font-semibold">
+                    Edition for: {newsletter.header.delivery_date}
+                  </h2>
+                  {newsletter.header.topics_covered && (
+                    <p className="text-gray-600">
+                      Topics covered: {newsletter.header.topics_covered.join(", ")}
                     </p>
-                  </div>
-                ))}
+                  )}
+                  {
+                    newsletter.header.intro_paragraph && (
+                      <p className="mt-4 text-gray-700">
+                        {newsletter.header.intro_paragraph}
+                      </p>
+                    )
+                  }
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ">
+                  {newsletter.topics.map((topic, index) => (
+                    <div
+                      key={index}
+                      className="bg-secondary-color p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-[#00355A] border-1"
+                      onClick={() => openModal(topic)}
+                    >
+                      <h3 className="font-bold text-xl mb-2">{topic.section_title}</h3>
+                      <p className="text-gray-700">
+                        {topic.section_summary.substring(0, 150)}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+              {index < filteredNewsletters.length - 1 && <Divider />}
+            </React.Fragment>
           ))}
         </div>
       ) : (

@@ -21,13 +21,22 @@ type Props = {
 };
 
 export default function NewsModal({ topic, onClose }: Props) {
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      // Only close if clicking directly on the backdrop, not the modal content
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    };
   if (!topic) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0  bg-opacity-10 backdrop-blur-sm z-50 flex justify-center items-center">
-      <div className="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0  bg-opacity-10 backdrop-blur-sm z-50 flex justify-center items-center"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-secondary-color p-8 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">{topic.section_title}</h2>
           <button
