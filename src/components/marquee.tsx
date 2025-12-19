@@ -90,7 +90,7 @@ export default function MyMarquee() {
           className="
           background-color text-black py-2 px-4 text-sm md:text-base lg:text-lg mt-4  
           "
-      direction="left" speed={40}  pauseOnHover gradient={false}>
+      direction="left" speed={60}  pauseOnHover gradient={false}>
          {
           newsTopics.map((topic, index) => (
             <span key={index} className="mx-8">
