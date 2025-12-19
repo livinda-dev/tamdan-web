@@ -23,4 +23,8 @@ export const faqData = [
     question: "What core technologies and APIs power the Tamdan system?",
     answer: "Tamdan relies on n8n for workflow automation and uses Supabase as the PostgreSQL database for storing user and newsletter data. Key integrations include the Brave Search API for news discovery, Firecrawl for clean content extraction, and the OpenRouter API for orchestrating various LLM agents (GPT-4o variants)."
   },
+  {
+    question: "Are there plans for new features in the future?",
+    answer: "The future roadmap for the Tamdan Personalized AI Search Agent System is structured across several phases to support enhanced personalization and robust scaling. Initial enhancements in Phase 1 focus on user experience, including implementing a user feedback loop (like thumbs up/down on articles) to improve content relevance. To achieve deep personalization in Phase 2, the system will introduce multi-language support (to translate summaries) and enable users to set custom delivery schedules per user, overriding the current fixed 6 AM daily delivery time. Long-term Phase 3 goals include the development of an ML-based topic recommendation engine, and feature expansion will aim to surpass the current limit on input topics by generating more than five high-quality search queries per topic,. Regarding system capacity, the architecture includes scaling recommendations necessary to handle up to 1,000 users. Though constrained by current budget limitations is the primary Brave API quota is limited for free trail. We would also like to explore with more intelligent and higher ends model within our project also."
+  },
 ];

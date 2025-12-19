@@ -169,6 +169,7 @@ export default function EditionPage() {
               onClick={() => {
                 setStartDate("");
                 setEndDate("");
+                router.replace(`/edition`);
               }}
               className="bg-gray-200 text-gray-700 px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-300"
             >
