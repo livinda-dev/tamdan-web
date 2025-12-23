@@ -14,37 +14,18 @@ const CATEGORY_QUERY_MAP: Record<string, string> = {
   health: "health OR medicine",
 };
 
-function getTodayUtcRangeForCambodia() {
+function getSafeUtcRangeForCambodia() {
   const now = new Date();
 
-  // Cambodia is UTC+7
-  const utcStart = new Date(
-    Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate() - 1,
-      17,
-      0,
-      0
-    )
-  );
-
-  const utcEnd = new Date(
-    Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      16,
-      59,
-      59
-    )
-  );
+  // Go back 36 hours to survive free-tier delays
+  const from = new Date(now.getTime() - 36 * 60 * 60 * 1000);
 
   return {
-    from: utcStart.toISOString(),
-    to: utcEnd.toISOString(),
+    from: from.toISOString(),
+    to: now.toISOString(),
   };
 }
+
 
 export async function GET(req: NextRequest) {
   try {
@@ -58,11 +39,13 @@ export async function GET(req: NextRequest) {
     const query =
       CATEGORY_QUERY_MAP[category] || CATEGORY_QUERY_MAP.general;
 
-    const { from, to } = getTodayUtcRangeForCambodia();
+    const { from, to } = getSafeUtcRangeForCambodia();
 
-    const url = `https://gnews.io/api/v4/search` +
+    const url =
+      `https://gnews.io/api/v4/search` +
       `?q=${encodeURIComponent(query)}` +
       `&lang=en` +
+      `&sortby=publishedAt` +
       `&from=${from}` +
       `&to=${to}` +
       `&max=5` +
@@ -72,8 +55,7 @@ export async function GET(req: NextRequest) {
     const res = await fetch(url, { cache: "no-store" });
 
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text);
+      throw new Error(await res.text());
     }
 
     const data = await res.json();
