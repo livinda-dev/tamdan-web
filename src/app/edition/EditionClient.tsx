@@ -44,7 +44,7 @@ export default function EditionPage() {
   const [loading, setLoading] = useState(true);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(1);
+  const [limit] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
 
   const [startDate, setStartDate] = useState("");
