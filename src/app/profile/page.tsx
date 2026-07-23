@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { isValidEmailFormat } from "@/lib/auth";
 
 interface UserRow {
   id: number;
@@ -21,9 +22,11 @@ export default function ProfilePage() {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showChangeEmailPrompt, setShowChangeEmailPrompt] = useState(false);
+  const [newEmailInput, setNewEmailInput] = useState("");
+  const [emailModalError, setEmailModalError] = useState<string | null>(null);
+  const [updatingEmail, setUpdatingEmail] = useState(false);
   const [updatingBot, setUpdatingBot] = useState(false);
   const [currentIdToken, setCurrentIdToken] = useState<string | null>(null);
-  const [changingEmail, setChangingEmail] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -68,21 +71,68 @@ export default function ProfilePage() {
     fetchProfile();
   }, [router]);
 
-  const handleChangeEmail = () => {
+  const handleChangeEmailClick = () => {
+    setNewEmailInput("");
+    setEmailModalError(null);
     setShowChangeEmailPrompt(true);
   };
 
-  const handleConfirmChangeEmail = () => {
-    setShowChangeEmailPrompt(false);
-    setChangingEmail(true);
-    localStorage.setItem("currentEmail", user?.email || "");
-    localStorage.setItem("currentIdToken", currentIdToken || "");
-    // Redirect to Google OAuth with email change flag
-    window.location.href = "/api/auth/google?emailChange=true";
-  };
+  const handleConfirmChangeEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailModalError(null);
 
-  const handleCancelChangeEmail = () => {
-    setShowChangeEmailPrompt(false);
+    const trimmed = newEmailInput.trim().toLowerCase();
+    if (!trimmed) {
+      setEmailModalError("Please enter a new email address.");
+      return;
+    }
+
+    if (!isValidEmailFormat(trimmed)) {
+      setEmailModalError("Please enter a valid email format (e.g. user@example.com).");
+      return;
+    }
+
+    if (trimmed === user?.email?.toLowerCase()) {
+      setEmailModalError("New email is identical to your current email.");
+      return;
+    }
+
+    setUpdatingEmail(true);
+
+    try {
+      const raw = localStorage.getItem("session");
+      if (!raw) throw new Error("Session expired. Please log in again.");
+      const session = JSON.parse(raw);
+      const idToken = session.id_token;
+
+      const res = await fetch("/api/profile/change-email", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          new_email: trimmed,
+          original_email: user?.email,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.ok) {
+        setEmailModalError(json.error || "Failed to update email.");
+        return;
+      }
+
+      setUser((prev) => (prev ? { ...prev, email: trimmed } : null));
+      setStatusMsg("Email updated successfully.");
+      setShowChangeEmailPrompt(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error updating email";
+      setEmailModalError(msg);
+    } finally {
+      setUpdatingEmail(false);
+    }
   };
 
   const handleBot = async () => {
@@ -107,7 +157,7 @@ export default function ProfilePage() {
         if (json.ok) {
           setUser(json.user);
         } else {
-          throw new Error(json.error || "Ulinking bot failed");
+          throw new Error(json.error || "Unlinking bot failed");
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Unknown";
@@ -115,43 +165,41 @@ export default function ProfilePage() {
       } finally {
         setUpdatingBot(false);
       }
-    } else{
+    } else {
       try {
-      const sessionRaw = localStorage.getItem("session");
-      if (!sessionRaw) {
-        alert("Session expired. Please log in again.");
-        return;
+        const sessionRaw = localStorage.getItem("session");
+        if (!sessionRaw) {
+          alert("Session expired. Please log in again.");
+          return;
+        }
+
+        const parsed = JSON.parse(sessionRaw) as { id_token?: string };
+        const idToken = parsed.id_token;
+
+        if (!idToken) {
+          alert("Session expired. Please log in again.");
+          return;
+        }
+
+        const res = await fetch("/api/bots/generate-telegram-token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+        });
+
+        const json = await res.json();
+
+        if (json.ok && json.token) {
+          window.open(`https://t.me/tamdanNewsBot?start=${json.token}`, "_blank");
+        } else {
+          alert("Failed to generate connection link. Please try again.");
+        }
+      } catch (error) {
+        console.error("Telegram connect error:", error);
+        alert("Failed to connect. Please try again.");
       }
-
-      const parsed = JSON.parse(sessionRaw) as { id_token?: string };
-      const idToken = parsed.id_token;
-
-      if (!idToken) {
-        alert("Session expired. Please log in again.");
-        return;
-      }
-
-      // Generate a one-time token for Telegram linking
-      const res = await fetch("/api/bots/generate-telegram-token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-      });
-
-      const json = await res.json();
-
-      if (json.ok && json.token) {
-        // Use correct Telegram URL format (works on web and mobile)
-        window.open(`https://t.me/tamdanNewsBot?start=${json.token}`, '_blank');
-      } else {
-        alert("Failed to generate connection link. Please try again.");
-      }
-    } catch (error) {
-      console.error("Telegram connect error:", error);
-      alert("Failed to connect. Please try again.");
-    }
     }
   };
 
@@ -198,7 +246,7 @@ export default function ProfilePage() {
             {editUsername !== (user.username ?? "") && (
               <div className="mt-3">
                 <button
-                  className="px-4 py-2 rounded-md text-white text-sm sm:text-base bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 rounded-md text-white text-sm sm:text-base bg-blue-600 hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
                   onClick={async () => {
                     setSaving(true);
                     setStatusMsg(null);
@@ -256,19 +304,19 @@ export default function ProfilePage() {
               Email
             </label>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <p className="text-base sm:text-lg text-gray-900">
+              <p className="text-base sm:text-lg text-gray-900 font-medium">
                 {user.email ?? "—"}
               </p>
               <button
-                onClick={handleChangeEmail}
-                disabled={changingEmail}
-                className="px-4 py-2  text-sm text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+                onClick={handleChangeEmailClick}
+                className="px-4 py-2 text-sm text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap cursor-pointer"
               >
-                {changingEmail ? "Changing..." : "Change Email"}
+                Change Email
               </button>
             </div>
           </div>
-          {/* Telegram bots section */}
+
+          {/* Telegram bot section */}
           <div>
             <label className="text-xs sm:text-sm text-gray-500 block mb-2">
               Telegram bot
@@ -280,7 +328,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleBot}
                 disabled={updatingBot}
-                className="px-4 py-2  text-sm text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+                className="px-4 py-2 text-sm text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap cursor-pointer"
               >
                 {user.chat_id
                   ? updatingBot
@@ -293,46 +341,66 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Change Email Confirmation Modal */}
+      {/* Change Email Modal */}
       {showChangeEmailPrompt && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 px-4"
-          onClick={handleCancelChangeEmail}
+          onClick={() => setShowChangeEmailPrompt(false)}
         >
           <div
-            className="bg-white shadow-xl px-6 sm:px-8 py-6 sm:py-8 text-center max-w-sm w-full"
+            className="bg-white shadow-xl rounded-xl px-6 sm:px-8 py-6 sm:py-8 text-left max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
-              Change Email
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+              Change Email Address
             </h3>
-            <p className="text-gray-600 text-xs sm:text-sm mb-6 leading-relaxed">
-              To change your email, you need to log in via Google again. We will
-              verify that the new email does not already exist in our system
-              before updating your account.
+            <p className="text-gray-600 text-xs sm:text-sm mb-4">
+              Enter your new email address. It must be in a valid format.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={handleCancelChangeEmail}
-                className="flex-1 px-4 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 text-sm sm:text-base"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmChangeEmail}
-                disabled={changingEmail}
-                className="flex-1 px-4 py-2 rounded-md text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 text-sm sm:text-base"
-              >
-                {changingEmail ? "Signing in..." : "Continue"}
-              </button>
-            </div>
+            <form onSubmit={handleConfirmChangeEmail} className="space-y-4">
+              {emailModalError && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded text-xs sm:text-sm text-red-700">
+                  {emailModalError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                  New Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="e.g. newuser@example.com"
+                  value={newEmailInput}
+                  onChange={(e) => {
+                    setNewEmailInput(e.target.value);
+                    setEmailModalError(null);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowChangeEmailPrompt(false)}
+                  className="flex-1 px-4 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingEmail}
+                  className="flex-1 px-4 py-2 rounded-md text-white bg-primary-color hover:bg-blue-700 disabled:opacity-50 text-sm cursor-pointer"
+                >
+                  {updatingEmail ? "Updating..." : "Update Email"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
     </main>
   );
-}
-function setChangingEmail(arg0: boolean) {
-  throw new Error("Function not implemented.");
 }

@@ -1,68 +1,275 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import { isValidEmailFormat } from "@/lib/auth";
 
-interface GoogleSignInModalProps {
+interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const GoogleSignInModal: React.FC<GoogleSignInModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [generalError, setGeneralError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   if (!isOpen) return null;
 
-  const handleGoogleSignIn = async () => {
-    try {
-      window.location.href = "/api/auth/google";
-    } catch (error) {
-      console.error("❌ Error starting Google OAuth:", error);
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
     }
   };
 
-  // ✅ close when clicking background
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Only close if clicking directly on the backdrop, not the modal content
-    if (e.target === e.currentTarget) {
-      onClose();
+  const handleClose = () => {
+    setEmail("");
+    setPassword("");
+    setUsername("");
+    setEmailError(null);
+    setGeneralError(null);
+    onClose();
+  };
+
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    setGeneralError(null);
+    if (val.trim() && !isValidEmailFormat(val.trim())) {
+      setEmailError("Invalid email format (e.g. user@example.com)");
+    } else {
+      setEmailError(null);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGeneralError(null);
+    setEmailError(null);
+
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setEmailError("Email is required.");
+      return;
+    }
+
+    if (!isValidEmailFormat(trimmedEmail)) {
+      setEmailError("Please enter a valid email format (e.g. user@example.com).");
+      return;
+    }
+
+    if (!password) {
+      setGeneralError("Password is required.");
+      return;
+    }
+
+    if (mode === "signup" && !username.trim()) {
+      setGeneralError("Username is required.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const endpoint = mode === "signin" ? "/api/auth/login" : "/api/auth/signup";
+      const payload =
+        mode === "signin"
+          ? { email: trimmedEmail, password }
+          : { username: username.trim(), email: trimmedEmail, password };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.ok) {
+        setGeneralError(json.error || "Authentication failed. Please try again.");
+        return;
+      }
+
+      if (json.session) {
+        localStorage.setItem("session", JSON.stringify(json.session));
+      }
+
+      handleClose();
+      window.location.reload();
+    } catch (err) {
+      console.error("Auth error:", err);
+      setGeneralError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50"
+      className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 p-4"
       onClick={handleBackdropClick}
     >
       <div
-        className="bg-white rounded-lg shadow-xl px-6 sm:px-8 md:px-10 py-8 sm:py-10 text-center max-w-sm w-full mx-4 sm:mx-0"
-        onClick={(e) => e.stopPropagation()} // prevent click inside from closing
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transition-all transform duration-200"
+        onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl sm:text-2xl font-serif text-gray-900 mb-3">
-          Welcome to តាមដាន Tamdan
-        </h2>
-        <p className="text-gray-600 text-xs sm:text-sm mb-6 sm:mb-8">
-          Sign in to save your interests and receive your personalized daily
-          digest
-        </p>
+        {/* Header */}
+        <div className="pt-6 sm:pt-8 px-6 sm:px-8 pb-4 text-center border-b border-gray-100">
+          <h2 className="text-2xl sm:text-3xl font-serif text-gray-900 font-bold">
+            Welcome to តាមដាន Tamdan
+          </h2>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">
+            Personalized daily news digest and updates
+          </p>
+        </div>
 
-        <button
-          onClick={handleGoogleSignIn}
-          className="w-full bg-white border border-gray-300 rounded-full flex items-center justify-center space-x-3 px-5 py-2 sm:py-2.5 shadow-sm hover:shadow-md transition cursor-pointer"
-        >
-          <img
-            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-            alt="Google Logo"
-            className="w-5 h-5"
-          />
-          <span className="text-gray-700 font-medium text-sm sm:text-base">Sign in with Google</span>
-        </button>
+        {/* Tab Switcher */}
+        <div className="flex border-b border-gray-200 bg-gray-50">
+          <button
+            type="button"
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+              mode === "signin"
+                ? "bg-white text-gray-900 border-b-2 border-primary-color"
+                : "text-gray-500 hover:text-gray-800"
+            }`}
+            onClick={() => {
+              setMode("signin");
+              setGeneralError(null);
+              setEmailError(null);
+            }}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+              mode === "signup"
+                ? "bg-white text-gray-900 border-b-2 border-primary-color"
+                : "text-gray-500 hover:text-gray-800"
+            }`}
+            onClick={() => {
+              setMode("signup");
+              setGeneralError(null);
+              setEmailError(null);
+            }}
+          >
+            Sign Up
+          </button>
+        </div>
 
-        <p className="text-xs text-gray-400 mt-5">
-          By signing in, you agree to receive a daily newsletter
-        </p>
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-4">
+          {generalError && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded text-xs sm:text-sm text-red-700">
+              {generalError}
+            </div>
+          )}
+
+          {mode === "signup" && (
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                Username
+              </label>
+              <input
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setGeneralError(null);
+                }}
+                className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+              Email Address
+            </label>
+            <input
+              type="email"
+              placeholder="e.g. user@example.com"
+              value={email}
+              onChange={(e) => handleEmailChange(e.target.value)}
+              className={`w-full px-3 py-2 sm:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition ${
+                emailError
+                  ? "border-red-500 focus:ring-red-400"
+                  : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
+              }`}
+            />
+            {emailError && (
+              <p className="mt-1 text-xs text-red-600">{emailError}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setGeneralError(null);
+              }}
+              className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-2 bg-primary-color text-white font-medium py-2.5 rounded-lg text-sm sm:text-base hover:opacity-95 active:scale-[0.99] transition disabled:opacity-50 cursor-pointer"
+          >
+            {loading
+              ? "Processing..."
+              : mode === "signin"
+              ? "Sign In"
+              : "Create Account"}
+          </button>
+
+          <div className="pt-2 text-center text-xs text-gray-500">
+            {mode === "signin" ? (
+              <p>
+                Don't have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("signup");
+                    setGeneralError(null);
+                    setEmailError(null);
+                  }}
+                  className="text-blue-600 font-semibold hover:underline cursor-pointer"
+                >
+                  Sign Up
+                </button>
+              </p>
+            ) : (
+              <p>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("signin");
+                    setGeneralError(null);
+                    setEmailError(null);
+                  }}
+                  className="text-blue-600 font-semibold hover:underline cursor-pointer"
+                >
+                  Sign In
+                </button>
+              </p>
+            )}
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default GoogleSignInModal;
+export default AuthModal;
