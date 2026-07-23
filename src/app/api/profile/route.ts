@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch Supabase user by email
     const { data: user, error: userErr } = await supabase
-      .from("user")
+      .from("users")
       .select("*")
       .eq("email", claims.email)
       .maybeSingle();
@@ -153,7 +153,7 @@ export async function PATCH(req: NextRequest) {
 
     // Update user by email
     const { data, error } = await supabase
-      .from("user")
+      .from("users")
       .update(updates)
       .eq("email", claims.email)
       .select()

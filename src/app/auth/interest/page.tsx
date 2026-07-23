@@ -108,8 +108,8 @@ export default function AuthInterestPage() {
         return;
       }
       setIdToken(session.id_token);
-      const claims = decodeJwtPayload<{ email?: string }>(session.id_token);
-      setUserEmail(claims?.email ?? null);
+      const claims = localStorage.getItem("email");
+      setUserEmail(claims ?? null);
     } catch (e) {
       console.error("Failed to read session", e);
       setIsGoogleModalOpen(true);

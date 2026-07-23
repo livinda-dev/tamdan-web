@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
 
     /* ---------- USER ---------- */
     const { data: user, error: userErr } = await supabase
-      .from("user")
+      .from("users")
       .select("id")
       .eq("email", claims.email)
       .maybeSingle();
@@ -102,8 +102,8 @@ export async function GET(req: NextRequest) {
     const endDate = req.nextUrl.searchParams.get("endDate");
 
     let query = supabase
-      .from("user_newsletter")
-      .select("id, header, topics, user_id, created_at", { count: "exact" })
+      .from("news_letters")
+      .select("id, news_json, topic_id, user_id, created_at", { count: "exact" })
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 

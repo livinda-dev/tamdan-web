@@ -43,6 +43,10 @@ export default function NavBar() {
       localStorage.removeItem("session");
       localStorage.removeItem("currentEmail");
       localStorage.removeItem("currentIdToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("email");
+      localStorage.removeItem("username");
+      localStorage.removeItem("user");
     } catch {}
     setIsLoggedIn(false);
     router.replace("/");
