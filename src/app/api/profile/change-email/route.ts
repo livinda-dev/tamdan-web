@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
 
     // First, get the user by their original email from Supabase
     const { data: currentUser, error: fetchError } = await supabase
-      .from("user")
+      .from("users")
       .select("email")
       .eq("email", originalEmail)
       .maybeSingle();
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
 
     // Check if new email already exists in the system
     const { data: existingUser, error: checkError } = await supabase
-      .from("user")
+      .from("users")
       .select("email")
       .eq("email", newEmail)
       .maybeSingle();
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 
     // Email doesn't exist, so update the current user's email
     const { data: updatedUser, error: updateError } = await supabase
-      .from("user")
+      .from("users")
       .update({ email: newEmail })
       .eq("email", originalEmail)
       .select()

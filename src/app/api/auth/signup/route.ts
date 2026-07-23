@@ -43,12 +43,16 @@ export async function POST(req: NextRequest) {
       auth: { persistSession: false },
     });
 
-    // Check if email already exists
-    const { data: existingUser } = await supabase
-      .from("user")
+    // 1. Check if user with email already exists in users table
+    const { data: existingUser, error: checkErr } = await supabase
+      .from("users")
       .select("email")
       .eq("email", email)
       .maybeSingle();
+
+    if (checkErr) {
+      console.error("[SignUp] Check user error:", checkErr.message);
+    }
 
     if (existingUser) {
       return Response.json(
@@ -57,14 +61,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 2. Hash password and insert record into users table
     const hashedPassword = hashPassword(password);
     const created_at = new Date().toISOString();
 
-    let createdUser: { id?: number | string; username?: string; email?: string } | null = null;
-
-    // Try inserting user with password
-    const { data: insertedData, error: insertError } = await supabase
-      .from("user")
+    const { data: newUser, error: insertError } = await supabase
+      .from("users")
       .insert({
         username,
         email,
@@ -75,29 +77,17 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (insertError) {
-      console.warn("Insert with password failed, trying without password field:", insertError.message);
-      // Fallback insert without password field if column is missing
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from("user")
-        .insert({
-          username,
-          email,
-          created_at,
-        })
-        .select()
-        .maybeSingle();
-
-      if (fallbackError) {
-        return Response.json({ ok: false, error: fallbackError.message }, { status: 502 });
-      }
-      createdUser = fallbackData;
-    } else {
-      createdUser = insertedData;
+      console.error("[SignUp] Insert into users error:", insertError.message);
+      return Response.json(
+        { ok: false, error: `Failed to create account: ${insertError.message}` },
+        { status: 500 }
+      );
     }
 
+    const userId = newUser?.id || email;
     const now = Math.floor(Date.now() / 1000);
     const token = createJwtToken({
-      sub: createdUser?.id || email,
+      sub: userId,
       email,
       name: username,
       iat: now,
@@ -115,6 +105,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       session: sessionObj,
       user: {
+        id: userId,
         username,
         email,
       },

@@ -96,6 +96,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         localStorage.setItem("session", JSON.stringify(json.session));
       }
 
+      if (json.user) {
+        const userId = json.user.id !== undefined && json.user.id !== null ? json.user.id : json.user.email;
+        localStorage.setItem("userId", String(userId));
+        localStorage.setItem("email", String(json.user.email || ""));
+        localStorage.setItem("currentEmail", String(json.user.email || ""));
+        localStorage.setItem("username", String(json.user.username || ""));
+        localStorage.setItem("user", JSON.stringify(json.user));
+      }
+
       handleClose();
       window.location.reload();
     } catch (err) {
@@ -117,7 +126,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       >
         {/* Header */}
         <div className="pt-6 sm:pt-8 px-6 sm:px-8 pb-4 text-center border-b border-gray-100">
-          <h2 className="text-2xl sm:text-3xl font-serif text-gray-900 font-bold">
+          <h2 className="text-2xl sm:text-3xl font-serif text-[#00355A] font-bold">
             Welcome to តាមដាន Tamdan
           </h2>
           <p className="text-gray-500 text-xs sm:text-sm mt-1">
@@ -129,10 +138,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <div className="flex border-b border-gray-200 bg-gray-50">
           <button
             type="button"
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+            className={`flex-1 py-3 text-sm font-semibold transition-colors cursor-pointer ${
               mode === "signin"
-                ? "bg-white text-gray-900 border-b-2 border-primary-color"
-                : "text-gray-500 hover:text-gray-800"
+                ? "bg-white text-[#00355A] border-b-2 border-[#00355A]"
+                : "text-gray-500 hover:text-[#00355A]"
             }`}
             onClick={() => {
               setMode("signin");
@@ -144,10 +153,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </button>
           <button
             type="button"
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+            className={`flex-1 py-3 text-sm font-semibold transition-colors cursor-pointer ${
               mode === "signup"
-                ? "bg-white text-gray-900 border-b-2 border-primary-color"
-                : "text-gray-500 hover:text-gray-800"
+                ? "bg-white text-[#00355A] border-b-2 border-[#00355A]"
+                : "text-gray-500 hover:text-[#00355A]"
             }`}
             onClick={() => {
               setMode("signup");
@@ -169,7 +178,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           {mode === "signup" && (
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs sm:text-sm font-semibold text-[#00355A] mb-1">
                 Username
               </label>
               <input
@@ -180,13 +189,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   setUsername(e.target.value);
                   setGeneralError(null);
                 }}
-                className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-[#00355A] font-medium bg-white placeholder:text-[#00355A]/40 focus:outline-none focus:ring-2 focus:ring-[#00355A] focus:border-transparent transition"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs sm:text-sm font-semibold text-[#00355A] mb-1">
               Email Address
             </label>
             <input
@@ -194,19 +203,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               placeholder="e.g. user@example.com"
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
-              className={`w-full px-3 py-2 sm:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition ${
+              className={`w-full px-3 py-2.5 border rounded-lg text-sm text-[#00355A] font-medium bg-white placeholder:text-[#00355A]/40 focus:outline-none focus:ring-2 transition ${
                 emailError
                   ? "border-red-500 focus:ring-red-400"
-                  : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
+                  : "border-gray-300 focus:ring-[#00355A] focus:border-transparent"
               }`}
             />
             {emailError && (
-              <p className="mt-1 text-xs text-red-600">{emailError}</p>
+              <p className="mt-1 text-xs text-red-600 font-medium">{emailError}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs sm:text-sm font-semibold text-[#00355A] mb-1">
               Password
             </label>
             <input
@@ -217,14 +226,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 setPassword(e.target.value);
                 setGeneralError(null);
               }}
-              className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-[#00355A] font-medium bg-white placeholder:text-[#00355A]/40 focus:outline-none focus:ring-2 focus:ring-[#00355A] focus:border-transparent transition"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 bg-primary-color text-white font-medium py-2.5 rounded-lg text-sm sm:text-base hover:opacity-95 active:scale-[0.99] transition disabled:opacity-50 cursor-pointer"
+            className="w-full mt-2 bg-[#00355A] text-white font-semibold py-2.5 rounded-lg text-sm sm:text-base hover:opacity-95 active:scale-[0.99] transition disabled:opacity-50 cursor-pointer shadow-sm"
           >
             {loading
               ? "Processing..."
@@ -244,7 +253,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     setGeneralError(null);
                     setEmailError(null);
                   }}
-                  className="text-blue-600 font-semibold hover:underline cursor-pointer"
+                  className="text-[#00355A] font-bold hover:underline cursor-pointer"
                 >
                   Sign Up
                 </button>
@@ -259,7 +268,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     setGeneralError(null);
                     setEmailError(null);
                   }}
-                  className="text-blue-600 font-semibold hover:underline cursor-pointer"
+                  className="text-[#00355A] font-bold hover:underline cursor-pointer"
                 >
                   Sign In
                 </button>

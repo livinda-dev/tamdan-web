@@ -38,15 +38,16 @@ export async function POST(req: NextRequest) {
       auth: { persistSession: false },
     });
 
-    // Fetch user by email
+    // 1. Fetch user by email from users table
     const { data: user, error: userErr } = await supabase
-      .from("user")
+      .from("users")
       .select("*")
       .eq("email", email)
       .maybeSingle();
 
     if (userErr) {
-      return Response.json({ ok: false, error: userErr.message }, { status: 502 });
+      console.error("[Login] Fetch user error:", userErr.message);
+      return Response.json({ ok: false, error: `Database error: ${userErr.message}` }, { status: 500 });
     }
 
     if (!user) {
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify password if password exists in database record
+    // 2. Verify password against hashed password in database
     if (user.password) {
       const isMatch = verifyPassword(password, user.password);
       if (!isMatch) {
@@ -66,22 +67,19 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      // If user row didn't have password saved yet, save it now
-      try {
-        const hashedPassword = hashPassword(password);
-        await supabase
-          .from("user")
-          .update({ password: hashedPassword })
-          .eq("email", email);
-      } catch (e) {
-        console.warn("Could not save password to existing user record:", e);
-      }
+      // If user row existed (e.g. created previously without password), set the password now
+      const hashedPassword = hashPassword(password);
+      await supabase
+        .from("users")
+        .update({ password: hashedPassword })
+        .eq("email", email);
     }
 
     const username = user.username || email.split("@")[0];
+    const userId = user.id || email;
     const now = Math.floor(Date.now() / 1000);
     const token = createJwtToken({
-      sub: user.id || email,
+      sub: userId,
       email,
       name: username,
       iat: now,
@@ -99,9 +97,9 @@ export async function POST(req: NextRequest) {
       ok: true,
       session: sessionObj,
       user: {
-        id: user.id,
+        id: userId,
         username,
-        email: user.email,
+        email,
       },
     });
   } catch (err: unknown) {
