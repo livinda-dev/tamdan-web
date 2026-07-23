@@ -140,29 +140,29 @@ export default function AuthInterestPage() {
       return;
     }
 
-    setSubmitting(true); // show loading overlay
+    // setSubmitting(true); // show loading overlay
 
-    for (const topic of arrayContent) {
-      const res = await fetch("/api/moderate-topic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic }),
-      });
+    // for (const topic of arrayContent) {
+    //   const res = await fetch("/api/moderate-topic", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ topic }),
+    //   });
 
-      const json = await res.json();
+    //   const json = await res.json();
 
-      if (json.status === "UNSAFE") {
-        setSubmitting(false); // hide loading
-        setAlertText(
-          `❌ Topic not allowed:\n"${topic}"\n\nReason: ${json.reason}`
-        );
-        setAlertStatus("error");
-        setIsAlertOpen(true);
-        return;
-      }
-    }
+    //   if (json.status === "UNSAFE") {
+    //     setSubmitting(false); // hide loading
+    //     setAlertText(
+    //       `❌ Topic not allowed:\n"${topic}"\n\nReason: ${json.reason}`
+    //     );
+    //     setAlertStatus("error");
+    //     setIsAlertOpen(true);
+    //     return;
+    //   }
+    // }
 
-    setSubmitting(true);
+    // setSubmitting(true);
     setStatus(null);
 
     try {
