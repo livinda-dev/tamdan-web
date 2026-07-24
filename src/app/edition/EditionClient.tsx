@@ -29,8 +29,10 @@ type NewsHeader = {
 
 type Newsletter = {
   id: string;
-  header: NewsHeader;
-  topics: NewsTopic[];
+  news_json: {
+    newsHeader: NewsHeader;
+    topics: NewsTopic[];
+  };
 };
 
 /* ================= COMPONENT ================= */
@@ -182,11 +184,11 @@ export default function EditionPage() {
             <React.Fragment key={newsletter.id}>
               <div>
                 <h2 className="text-2xl font-semibold mb-4">
-                  Edition for: {newsletter?.header?.delivery_date}
+                  Edition for: {newsletter?.news_json?.newsHeader?.delivery_date}
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {newsletter?.topics?.map((topic, i) => (
+                  {newsletter?.news_json?.topics?.map((topic, i) => (
                     <div
                       key={i}
                       onClick={() => openModal(topic)}
