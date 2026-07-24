@@ -27,11 +27,18 @@ type NewsHeader = {
   intro_paragraph: string;
 };
 
+// Raw shape returned by the API (news_json is a JSON string)
+type NewsletterRaw = {
+  id: string;
+  news_json: string;
+};
+
+// Parsed shape used in the component
 type Newsletter = {
   id: string;
   news_json: {
     newsHeader: NewsHeader;
-    topics: NewsTopic[];
+    newsTopics: NewsTopic[];
   };
 };
 
@@ -92,7 +99,17 @@ export default function EditionPage() {
       const json = await res.json();
 
       if (json.ok) {
-        setNewsletters(json.newsletters);
+        // Parse the news_json string into an object for each newsletter
+        const parsed: Newsletter[] = (json.newsletters as NewsletterRaw[]).map(
+          (n) => ({
+            ...n,
+            news_json:
+              typeof n.news_json === "string"
+                ? JSON.parse(n.news_json)
+                : n.news_json,
+          })
+        );
+        setNewsletters(parsed);
         setTotalPages(json.totalPages);
       } else {
         setNewsletters([]);
@@ -135,6 +152,7 @@ export default function EditionPage() {
       router.replace("/");
     }
   }, [router]);
+
 
   /* ================= UI ================= */
 
@@ -188,7 +206,7 @@ export default function EditionPage() {
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {newsletter?.news_json?.topics?.map((topic, i) => (
+                  {newsletter?.news_json?.newsTopics?.map((topic, i) => (
                     <div
                       key={i}
                       onClick={() => openModal(topic)}
