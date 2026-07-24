@@ -20,21 +20,21 @@ export interface NewsHeader {
   // intro_paragraph: string;
 }
 
-export interface News{
+export interface News {
   newsHeader: NewsHeader;
   newsTopics: NewsTopic[];
 }
 
 export interface NewsResponse {
   ok: boolean;
-  newsletterId: number;
+  topicId: number;
   newsHeader: NewsHeader;
   newsTopics: NewsTopic[];
 }
 
 export const mockNewsData: NewsResponse = {
   ok: true,
-  newsletterId: 2,
+  topicId: 2,
   newsHeader: {
     edition_name: "Tamdan Mock newsletter",
     subject_line: "Cambodia-Thailand Border, Stock Market Rally, AI Coding Tools Growth",
