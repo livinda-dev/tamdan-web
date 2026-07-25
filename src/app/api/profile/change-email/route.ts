@@ -1,89 +1,58 @@
+// src/app/api/profile/change-email/route.ts
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { withAuth, JwtClaims } from "@/lib/middleware";
 
 export const runtime = "nodejs";
 
-function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
-  if (!jwt) return null;
-  const parts = jwt.split(".");
-  if (parts.length < 2) return null;
-  const json = Buffer.from(parts[1], "base64").toString("utf8");
+async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response> {
   try {
-    return JSON.parse(json) as T;
-  } catch {
-    return null;
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    const auth = req.headers.get("Authorization");
-    if (!auth?.startsWith("Bearer ")) {
-      return Response.json(
-        { ok: false, error: "Missing token" },
-        { status: 401 }
-      );
-    }
-
-    const idToken = auth.replace("Bearer ", "");
-    const claims = decodeJwtPayload<{ email?: string; sub?: string }>(idToken);
-
-    if (!claims?.email) {
-      return Response.json(
-        { ok: false, error: "Invalid token" },
-        { status: 401 }
-      );
+    if (!claims.email) {
+      return Response.json({ ok: false, error: "Email not present in token" }, { status: 400 });
     }
 
     const body = await req.json();
-    const newEmail = typeof body?.new_email === "string" ? body.new_email.trim() : undefined;
-    const originalEmail = typeof body?.original_email === "string" ? body.original_email.trim() : undefined;
+    const newEmail =
+      typeof body?.new_email === "string" ? body.new_email.trim() : undefined;
+    const originalEmail =
+      typeof body?.original_email === "string" ? body.original_email.trim() : undefined;
 
     if (!newEmail) {
-      return Response.json(
-        { ok: false, error: "Missing new_email field" },
-        { status: 400 }
-      );
+      return Response.json({ ok: false, error: "Missing new_email field" }, { status: 400 });
     }
 
     if (!originalEmail) {
-      return Response.json(
-        { ok: false, error: "Missing original_email field" },
-        { status: 400 }
-      );
+      return Response.json({ ok: false, error: "Missing original_email field" }, { status: 400 });
     }
 
     // Check if new email is the same as original email
     if (newEmail === originalEmail) {
       return Response.json(
-        { 
-          ok: false, 
-          error: "Please log in with a different Google account. You selected the same email as your current account." 
-        }, 
+        {
+          ok: false,
+          error:
+            "Please log in with a different Google account. You selected the same email as your current account.",
+        },
         { status: 400 }
       );
     }
 
     const supabaseUrl =
       process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-
     const supabaseKey =
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
       process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
-      return Response.json(
-        { ok: false, error: "Supabase env missing" },
-        { status: 500 }
-      );
+      return Response.json({ ok: false, error: "Supabase env missing" }, { status: 500 });
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: { persistSession: false },
     });
 
-    // First, get the user by their original email from Supabase
+    // Get the user by their original email from Supabase
     const { data: currentUser, error: fetchError } = await supabase
       .from("users")
       .select("email")
@@ -91,20 +60,14 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (fetchError) {
-      return Response.json(
-        { ok: false, error: fetchError.message },
-        { status: 502 }
-      );
+      return Response.json({ ok: false, error: fetchError.message }, { status: 502 });
     }
 
     if (!currentUser) {
-      return Response.json(
-        { ok: false, error: "User not found" },
-        { status: 404 }
-      );
+      return Response.json({ ok: false, error: "User not found" }, { status: 404 });
     }
 
-    // Now check if new email is the same as current email in Supabase
+    // Check if new email is the same as current email in Supabase
     if (newEmail === currentUser.email) {
       return Response.json(
         { ok: false, error: "New email is the same as current email" },
@@ -120,10 +83,7 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (checkError) {
-      return Response.json(
-        { ok: false, error: checkError.message },
-        { status: 502 }
-      );
+      return Response.json({ ok: false, error: checkError.message }, { status: 502 });
     }
 
     if (existingUser) {
@@ -146,17 +106,11 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (updateError) {
-      return Response.json(
-        { ok: false, error: updateError.message },
-        { status: 502 }
-      );
+      return Response.json({ ok: false, error: updateError.message }, { status: 502 });
     }
 
     if (!updatedUser) {
-      return Response.json(
-        { ok: false, error: "Failed to update email" },
-        { status: 500 }
-      );
+      return Response.json({ ok: false, error: "Failed to update email" }, { status: 500 });
     }
 
     return Response.json({ ok: true, user: updatedUser });
@@ -165,3 +119,5 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: msg }, { status: 500 });
   }
 }
+
+export const POST = withAuth(handlePost);

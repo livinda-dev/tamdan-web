@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, chat_id } = body;
+    const { phone_number, chat_id } = body;
 
     console.log("📩 API CALLED:", body);
 
@@ -14,9 +14,9 @@ export async function POST(req: Request) {
     );
 
     const { data, error } = await supabase
-      .from("user")
+      .from("users")
       .update({ chat_id })
-      .eq("email", email)
+      .eq("phone_number", phone_number)
       .select();
 
     console.log("🛠 Supabase Result:", data, error);
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     if (error) return NextResponse.json({ error }, { status: 400 });
     if (!data || data.length === 0)
       return NextResponse.json(
-        { error: "Email not found" },
+        { error: "Phone number not found" },
         { status: 404 }
       );
 
