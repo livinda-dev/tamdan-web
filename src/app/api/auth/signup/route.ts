@@ -8,11 +8,16 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const username = typeof body?.username === "string" ? body.username.trim() : "";
+    const phone_number = typeof body?.phone_number === "string" ? body.phone_number.trim() : "";
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     const password = typeof body?.password === "string" ? body.password : "";
 
     if (!username) {
       return Response.json({ ok: false, error: "Username is required." }, { status: 400 });
+    }
+
+    if (!phone_number) {
+      return Response.json({ ok: false, error: "Phone number is required." }, { status: 400 });
     }
 
     if (!email || !isValidEmailFormat(email)) {
@@ -61,6 +66,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 1.2 Check if user with phone number already exist in users table
+    const { data: existingUserPhone, error: checkErrPhone } = await supabase
+      .from("users")
+      .select("phone_number")
+      .eq("phone_number", phone_number)
+      .maybeSingle();
+
+    if (checkErrPhone) {
+      console.error("[SignUp] Check user error:", checkErrPhone.message);
+    }
+
+    if (existingUserPhone) {
+      return Response.json(
+        { ok: false, error: "An account with this phone number already exists. Please log in." },
+        { status: 409 }
+      );
+    }
+
     // 2. Hash password and insert record into users table
     const hashedPassword = hashPassword(password);
     const created_at = new Date().toISOString();
@@ -70,6 +93,7 @@ export async function POST(req: NextRequest) {
       .insert({
         username,
         email,
+        phone_number,
         password: hashedPassword,
         created_at,
       })
@@ -90,6 +114,7 @@ export async function POST(req: NextRequest) {
       sub: userId,
       email,
       name: username,
+      phone_number,
       iat: now,
       exp: now + 30 * 24 * 60 * 60,
     });
@@ -108,6 +133,7 @@ export async function POST(req: NextRequest) {
         id: userId,
         username,
         email,
+        phone_number,
       },
     });
   } catch (err: unknown) {

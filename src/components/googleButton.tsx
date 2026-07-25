@@ -12,6 +12,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [phone_number, setPhone_number] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -28,6 +29,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setEmail("");
     setPassword("");
     setUsername("");
+    setPhone_number("");
     setEmailError(null);
     setGeneralError(null);
     onClose();
@@ -59,6 +61,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       setEmailError("Please enter a valid email format (e.g. user@example.com).");
       return;
     }
+    if(!phone_number.trim){
+      setGeneralError("Phone number is required.");
+      return;
+    }
 
     if (!password) {
       setGeneralError("Password is required.");
@@ -77,7 +83,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       const payload =
         mode === "signin"
           ? { email: trimmedEmail, password }
-          : { username: username.trim(), email: trimmedEmail, password };
+          : { username: username.trim(), email: trimmedEmail, password, phone_number: phone_number.trim() };
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -177,6 +183,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           )}
 
           {mode === "signup" && (
+            <>
+            
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-[#00355A] mb-1">
                 Username
@@ -192,6 +200,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-[#00355A] font-medium bg-white placeholder:text-[#00355A]/40 focus:outline-none focus:ring-2 focus:ring-[#00355A] focus:border-transparent transition"
               />
             </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-[#00355A] mb-1">
+                Phone Number
+              </label>
+              <input
+                type="text"
+                placeholder="Enter your phone number"
+                value={phone_number}
+                onChange={(e) => {
+                  setPhone_number(e.target.value);
+                  setGeneralError(null);
+                }}
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-[#00355A] font-medium bg-white placeholder:text-[#00355A]/40 focus:outline-none focus:ring-2 focus:ring-[#00355A] focus:border-transparent transition"
+              />
+            </div>
+            </>
           )}
 
           <div>
