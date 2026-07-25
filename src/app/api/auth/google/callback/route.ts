@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
 
         if (email) {
           const { data, error } = await supabase
-            .from("user")
+            .from("users")
             .upsert(payload, { onConflict: "email" })
             .select();
           if (error) {
@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
           }
         } else {
           const { data, error } = await supabase
-            .from("user")
+            .from("users")
             .insert(payload)
             .select();
           if (error) {

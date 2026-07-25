@@ -1,4 +1,6 @@
-import { NextResponse, NextRequest } from "next/server";
+// src/app/api/world-news/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth, JwtClaims } from "@/lib/middleware";
 
 export const runtime = "nodejs";
 
@@ -16,18 +18,12 @@ const CATEGORY_QUERY_MAP: Record<string, string> = {
 
 function getSafeUtcRangeForCambodia() {
   const now = new Date();
-
   // Go back 36 hours to survive free-tier delays
   const from = new Date(now.getTime() - 36 * 60 * 60 * 1000);
-
-  return {
-    from: from.toISOString(),
-    to: now.toISOString(),
-  };
+  return { from: from.toISOString(), to: now.toISOString() };
 }
 
-
-export async function GET(req: NextRequest) {
+async function handleGet(req: NextRequest, _claims: JwtClaims): Promise<Response> {
   try {
     const apiKey = process.env.GNEWS_API_KEY;
     if (!apiKey) throw new Error("GNEWS_API_KEY is missing");
@@ -35,9 +31,7 @@ export async function GET(req: NextRequest) {
     const page = Number(req.nextUrl.searchParams.get("page") || 1);
     const category =
       req.nextUrl.searchParams.get("category")?.toLowerCase() || "general";
-
-    const query =
-      CATEGORY_QUERY_MAP[category] || CATEGORY_QUERY_MAP.general;
+    const query = CATEGORY_QUERY_MAP[category] || CATEGORY_QUERY_MAP.general;
 
     const { from, to } = getSafeUtcRangeForCambodia();
 
@@ -68,9 +62,8 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("GNews API error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch news" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch news" }, { status: 500 });
   }
 }
+
+export const GET = withAuth(handleGet);

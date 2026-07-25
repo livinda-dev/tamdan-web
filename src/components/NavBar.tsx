@@ -33,7 +33,9 @@ export default function NavBar() {
   const [userName, setUserName] = useState<string | null>(null);
   const [userChatId, setUserChatId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
+  const [userPhoneNumber, setUserPhoneNumber] = useState<string | null>(null);
+  // Must use NEXT_PUBLIC_ prefix so the value is available in the browser bundle
+  const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
   const handleOpenGoogle = () => {
     setIsGoogleModalOpen(true);
   };
@@ -47,6 +49,7 @@ export default function NavBar() {
       localStorage.removeItem("email");
       localStorage.removeItem("username");
       localStorage.removeItem("user");
+      localStorage.removeItem("phone_number");
     } catch {}
     setIsLoggedIn(false);
     router.replace("/");
@@ -81,6 +84,7 @@ export default function NavBar() {
         if (json?.ok && json.user) {
           setUserEmail(json.user.email ?? null);
           setUserChatId(json.user.chat_id ?? null);
+          setUserPhoneNumber(json.user.phone_number ?? null);
           // prefer username from DB; fall back to name claim
           const nameFromJwt =
             decodeJwtPayload<{ name?: string }>(idToken)?.name ?? null;
@@ -92,6 +96,7 @@ export default function NavBar() {
           );
           setUserEmail(claims?.email ?? null);
           setUserName(claims?.name ?? null);
+          setUserPhoneNumber(null);
         }
       } catch (err) {
         console.error("NavBar loadUser failed", err);
@@ -119,6 +124,11 @@ export default function NavBar() {
       return;
     }
 
+    if (!userPhoneNumber) {
+      alert("Please add a phone number in your profile before connecting Telegram.");
+      return;
+    }
+
     try {
       const sessionRaw = localStorage.getItem("session");
       if (!sessionRaw) {
@@ -135,19 +145,21 @@ export default function NavBar() {
       }
 
       // Generate a one-time token for Telegram linking
+      // phone_number is sent in the body (it is not embedded in the JWT)
       const res = await fetch("/api/bots/generate-telegram-token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
         },
+        body: JSON.stringify({ phone_number: userPhoneNumber }),
       });
 
       const json = await res.json();
 
       if (json.ok && json.token) {
-        // Use correct Telegram URL format (works on web and mobile)
-        window.open(`https://t.me/tamdanNewsBot?start=${json.token}`, "_blank");
+        // NEXT_PUBLIC_TELEGRAM_BOT_USERNAME must be set in .env.local
+        window.open(`https://t.me/livindabot?start=${json.token}`, "_blank");
         setIsDropdownOpen(false);
       } else {
         alert("Failed to generate connection link. Please try again.");

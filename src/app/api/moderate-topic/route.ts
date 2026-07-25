@@ -1,13 +1,15 @@
+// src/app/api/moderate-topic/route.ts
 export const runtime = "nodejs";
 
+import { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { withAuth, JwtClaims } from "@/lib/middleware";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 if (!OPENROUTER_API_KEY) {
   throw new Error("OPENROUTER_API_KEY is not defined in the environment variables");
 }
-
 
 const SYSTEM_PROMPT = `
 You are a strict content moderation and input validation engine.
@@ -65,7 +67,7 @@ You MUST respond only in JSON:
 }
 `;
 
-export async function POST(request: Request) {
+async function handlePost(request: NextRequest, _claims: JwtClaims): Promise<Response> {
   try {
     const { topic } = await request.json();
     if (!topic) {
@@ -75,23 +77,26 @@ export async function POST(request: Request) {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        "model": "google/gemini-2.5-flash",
-        "messages": [
-          { "role": "system", "content": SYSTEM_PROMPT },
-          { "role": "user", "content": `Topic: "${topic}"` }
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: `Topic: "${topic}"` },
         ],
-        "temperature": 0
-      })
+        temperature: 0,
+      }),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
       console.error("OpenRouter API Error:", errorBody);
-      return NextResponse.json({ error: "Failed to fetch from OpenRouter API", details: errorBody }, { status: response.status });
+      return NextResponse.json(
+        { error: "Failed to fetch from OpenRouter API", details: errorBody },
+        { status: response.status }
+      );
     }
 
     const result = await response.json();
@@ -110,20 +115,19 @@ export async function POST(request: Request) {
       } catch {}
     }
 
-    // Try 3 → Final fallback (SAFE default)
+    // Try 3 → Final fallback (UNSAFE default)
     return NextResponse.json({
       status: "UNSAFE",
-      reason: "Model returned unreadable output"
+      reason: "Model returned unreadable output",
     });
   } catch (err) {
-    const errorMessage =
-      err instanceof Error ? err.message : "Unknown error";
-
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
     console.error("MODERATION ERROR:", errorMessage);
-
     return NextResponse.json(
       { error: "Moderation failed", detail: errorMessage },
       { status: 500 }
     );
   }
 }
+
+export const POST = withAuth(handlePost);
