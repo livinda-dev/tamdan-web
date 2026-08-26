@@ -25,6 +25,7 @@ function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
 export default function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [logoUrl, setLogoUrl] = useState<string>("/image/LogoTamdan.png");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -54,6 +55,26 @@ export default function NavBar() {
     setIsLoggedIn(false);
     router.replace("/");
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchLogo() {
+      try {
+        const res = await fetch("/api/site-settings");
+        if (!res.ok) return;
+        const json = await res.json();
+        if (json?.ok && json.data?.logo_url && isMounted) {
+          setLogoUrl(json.data.logo_url);
+        }
+      } catch (err) {
+        console.error("Failed to load site logo for navbar:", err);
+      }
+    }
+    fetchLogo();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     async function loadUser() {
@@ -196,11 +217,13 @@ export default function NavBar() {
         <div className="flex h-14 md:h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex flex-shrink-0">
-            <img
-              src="/image/LogoTamdan.png"
-              alt="Logo"
-              className="h-4 md:h-7 w-auto"
-            />
+            <Link href="/" className="flex items-center">
+              <img
+                src={logoUrl || "/image/LogoTamdan.png"}
+                alt="Logo"
+                className="h-4 md:h-7 w-auto"
+              />
+            </Link>
           </div>
 
           {/* Desktop Navigation - Centered */}
