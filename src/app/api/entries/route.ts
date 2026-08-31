@@ -33,7 +33,7 @@ async function handleGet(req: NextRequest, claims: JwtClaims): Promise<Response>
 
     const { data: userRow, error: userErr } = await supabase
       .from("users")
-      .select("id")
+      .select("id, topic_limit")
       .eq("email", email)
       .maybeSingle();
 
@@ -49,6 +49,8 @@ async function handleGet(req: NextRequest, claims: JwtClaims): Promise<Response>
       );
     }
 
+    const topicLimit: number = userRow.topic_limit ?? 5;
+
     const { data: userTitle, error: titleError } = await supabase
       .from("topics")
       .select("topic")
@@ -60,7 +62,11 @@ async function handleGet(req: NextRequest, claims: JwtClaims): Promise<Response>
       return Response.json({ ok: false, error: titleError.message }, { status: 502 });
     }
 
-    return Response.json({ ok: true, title: userTitle?.topic ?? null });
+    return Response.json({
+      ok: true,
+      title: userTitle?.topic ?? null,
+      topic_limit: topicLimit,
+    });
   } catch (e: unknown) {
     const message =
       e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";
@@ -94,7 +100,7 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
 
     const { data: userRow, error: userErr } = await supabase
       .from("users")
-      .select("id")
+      .select("id, topic_limit")
       .eq("email", email)
       .maybeSingle();
 
@@ -107,6 +113,23 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       return Response.json(
         { ok: false, error: "User not found in database. Please sign out and sign in again." },
         { status: 404 }
+      );
+    }
+
+    // Server-side enforcement of the per-user topic limit
+    const topicLimit: number = userRow.topic_limit ?? 5;
+    const topicCount = content
+      .split("\\n")
+      .filter((t: string) => t.trim() !== "").length;
+
+    if (topicCount > topicLimit) {
+      return Response.json(
+        {
+          ok: false,
+          error: `You can only submit up to ${topicLimit} topic${topicLimit === 1 ? "" : "s"}.`,
+          topic_limit: topicLimit,
+        },
+        { status: 422 }
       );
     }
 

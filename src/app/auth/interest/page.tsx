@@ -39,6 +39,8 @@ export default function AuthInterestPage() {
     "info"
   );
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  // Dynamic topic limit fetched from the server (admin-controlled per user)
+  const [topicLimit, setTopicLimit] = useState(5);
 
   const fetchEntries = async (token: string) => {
     try {
@@ -49,6 +51,10 @@ export default function AuthInterestPage() {
       });
       const json = await res.json();
       if (json.ok) {
+        // Read the admin-controlled per-user topic limit
+        if (typeof json.topic_limit === "number" && json.topic_limit >= 1) {
+          setTopicLimit(json.topic_limit);
+        }
         const dbContent = json.title || ""; // comma separated from DB
         setSavedContent(dbContent);
         if (dbContent) {
@@ -129,9 +135,9 @@ export default function AuthInterestPage() {
       .map((line) => line.replace(/^•\s*/, "").trim())
       .filter((line) => line.length > 0);
 
-    // ❌ Block if more than 5 topics
-    if (arrayContent.length > 5) {
-      setStatus("You can only submit up to 5 topics.");
+    // ❌ Block if more than the user's allowed topic limit
+    if (arrayContent.length > topicLimit) {
+      setStatus(`You can only submit up to ${topicLimit} topic${topicLimit === 1 ? "" : "s"}.`);
       return;
     }
 
@@ -251,8 +257,8 @@ export default function AuthInterestPage() {
                   (l) => l.trim() !== ""
                 ).length;
 
-                if (nonEmptyCount > 5) {
-                  setAlertText("You can only submit up to 5 topics.");
+                if (nonEmptyCount > topicLimit) {
+                  setAlertText(`You can only submit up to ${topicLimit} topic${topicLimit === 1 ? "" : "s"}.`);
                   setAlertStatus("error");
                   setIsAlertOpen(true);
 
