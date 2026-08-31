@@ -23,6 +23,9 @@ export default function NoAuthLandingPage() {
   );
   const [charLimitWarning, setCharLimitWarning] = useState(false);
   const [topicLimitWarning, setTopicLimitWarning] = useState(false);
+  // Default preview limit shown to unauthenticated users.
+  // The actual enforced limit is per-user and set by the admin after login.
+  const [topicLimit] = useState(5);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,8 +66,8 @@ export default function NoAuthLandingPage() {
                     (l) => l.trim() !== ""
                   ).length;
 
-                  // If already at 5 topics, prevent adding more non-empty lines
-                  if (nonEmptyCount > 5) {
+                  // If already at limit, prevent adding more non-empty lines
+                  if (nonEmptyCount > topicLimit) {
                     setTopicLimitWarning(true);
                     // Block the new input - keep previous content
                     return;
@@ -116,7 +119,7 @@ export default function NoAuthLandingPage() {
 
               {(charLimitWarning || topicLimitWarning) && (
                 <div className="absolute top-2 right-2 text-red-800 px-2 sm:px-3 py-1 text-xs sm:text-sm">
-                  {topicLimitWarning && "⚠ Max 5 topics"}
+                  {topicLimitWarning && `⚠ Max ${topicLimit} topics`}
                   {!topicLimitWarning &&
                     charLimitWarning &&
                     "⚠ Line limit"}
