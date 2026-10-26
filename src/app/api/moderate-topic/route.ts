@@ -7,10 +7,6 @@ import { withAuth, JwtClaims } from "@/lib/middleware";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-if (!OPENROUTER_API_KEY) {
-  throw new Error("OPENROUTER_API_KEY is not defined in the environment variables");
-}
-
 const SYSTEM_PROMPT = `
 You are a strict content moderation and input validation engine.
 
@@ -72,6 +68,13 @@ async function handlePost(request: NextRequest, _claims: JwtClaims): Promise<Res
     const { topic } = await request.json();
     if (!topic) {
       return NextResponse.json({ error: "Missing topic" }, { status: 400 });
+    }
+
+    if (!OPENROUTER_API_KEY) {
+      return NextResponse.json(
+        { error: "OPENROUTER_API_KEY is not defined in the environment variables" },
+        { status: 500 }
+      );
     }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
