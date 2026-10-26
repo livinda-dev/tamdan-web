@@ -108,6 +108,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 2.1 Sync into Supabase Auth (auth.users) so user appears in Supabase dashboard
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        await supabase.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { username, phone_number },
+        });
+      } catch (authCreateErr) {
+        console.warn("[SignUp] Supabase auth user creation warning:", authCreateErr);
+      }
+    }
+
     const userId = newUser?.id || email;
     const now = Math.floor(Date.now() / 1000);
     const token = createJwtToken({
