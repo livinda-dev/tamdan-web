@@ -1,0 +1,28 @@
+name: Wake up Render Free Services
+
+on:
+  schedule:
+    # 6:50 AM Cambodia Time (ICT, UTC+7) = 23:50 UTC
+    - cron: '50 23 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  wake-up-services:
+    name: Wake up Render Free Instances
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping News Pro Service
+        run: |
+          echo "Sending wake-up ping to https://news-pro-5cab.onrender.com/ ..."
+          curl -sSL -m 180 \
+            -H "User-Agent: GitHub-Actions-WakeUp-Bot/1.0" \
+            -w "\n[News Pro] HTTP Status: %{http_code} | Total Time: %{time_total}s\n" \
+            https://news-pro-5cab.onrender.com/ || echo "[News Pro] Ping sent (Render container spin-up triggered)"
+
+      - name: Ping n8n Service
+        run: |
+          echo "Sending wake-up ping to https://n8n-service-rtt5.onrender.com ..."
+          curl -sSL -m 180 \
+            -H "User-Agent: GitHub-Actions-WakeUp-Bot/1.0" \
+            -w "\n[n8n Service] HTTP Status: %{http_code} | Total Time: %{time_total}s\n" \
+            https://n8n-service-rtt5.onrender.com || echo "[n8n Service] Ping sent (Render container spin-up triggered)"

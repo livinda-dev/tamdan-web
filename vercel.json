@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/wake-up",
+      "schedule": "50 23 * * *"
+    }
+  ]
+}
