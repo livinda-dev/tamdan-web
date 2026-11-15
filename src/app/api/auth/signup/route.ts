@@ -109,13 +109,15 @@ export async function POST(req: NextRequest) {
     }
 
     // 2.1 Sync into Supabase Auth (auth.users) so user appears in Supabase dashboard
+    // Explicitly set role: 'user' to ensure separation from administrator accounts
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
       try {
         await supabase.auth.admin.createUser({
           email,
           password,
           email_confirm: true,
-          user_metadata: { username, phone_number },
+          user_metadata: { username, phone_number, role: "user" },
+          app_metadata: { role: "user" },
         });
       } catch (authCreateErr) {
         console.warn("[SignUp] Supabase auth user creation warning:", authCreateErr);

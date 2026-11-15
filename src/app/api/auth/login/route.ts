@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
       sub: userId,
       email,
       name: username,
+      role: user.role || "user",
       iat: now,
       exp: now + 30 * 24 * 60 * 60,
     });
