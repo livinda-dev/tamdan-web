@@ -33,7 +33,7 @@ async function handleGet(req: NextRequest, claims: JwtClaims): Promise<Response>
 
     const { data: userRow, error: userErr } = await supabase
       .from("users")
-      .select("id, topic_limit")
+      .select("*")
       .eq("email", email)
       .maybeSingle();
 
@@ -50,6 +50,14 @@ async function handleGet(req: NextRequest, claims: JwtClaims): Promise<Response>
     }
 
     const topicLimit: number = userRow.topic_limit ?? 5;
+    const today = new Date().toISOString().slice(0, 10);
+    const lastDate = userRow.last_submission_date
+      ? new Date(userRow.last_submission_date).toISOString().slice(0, 10)
+      : null;
+
+    const currentDailyCount = (lastDate === today) ? (userRow.daily_submission_count ?? 0) : 0;
+    const maxDailySubmissions = 3;
+    const remainingDailySubmissions = Math.max(0, maxDailySubmissions - currentDailyCount);
 
     const { data: userTitle, error: titleError } = await supabase
       .from("topics")
@@ -66,6 +74,9 @@ async function handleGet(req: NextRequest, claims: JwtClaims): Promise<Response>
       ok: true,
       title: userTitle?.topic ?? null,
       topic_limit: topicLimit,
+      daily_submission_count: currentDailyCount,
+      max_daily_submissions: maxDailySubmissions,
+      remaining_daily_submissions: remainingDailySubmissions,
     });
   } catch (e: unknown) {
     const message =
@@ -100,7 +111,7 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
 
     const { data: userRow, error: userErr } = await supabase
       .from("users")
-      .select("id, topic_limit")
+      .select("*")
       .eq("email", email)
       .maybeSingle();
 
@@ -116,7 +127,30 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       );
     }
 
-    // Server-side enforcement of the per-user topic limit
+    // 1. Enforce Daily Submission Limit (3 times per day)
+    const today = new Date().toISOString().slice(0, 10);
+    const lastDate = userRow.last_submission_date
+      ? new Date(userRow.last_submission_date).toISOString().slice(0, 10)
+      : null;
+
+    const currentDailyCount = (lastDate === today) ? (userRow.daily_submission_count ?? 0) : 0;
+    const maxDailySubmissions = 3;
+
+    if (currentDailyCount >= maxDailySubmissions) {
+      return Response.json(
+        {
+          ok: false,
+          error: "Daily submission limit reached. You can only submit topics up to 3 times per day to prevent spam.",
+          daily_limit_reached: true,
+          daily_submission_count: currentDailyCount,
+          max_daily_submissions: maxDailySubmissions,
+          remaining_daily_submissions: 0,
+        },
+        { status: 429 }
+      );
+    }
+
+    // 2. Server-side enforcement of the per-user topic limit
     const topicLimit: number = userRow.topic_limit ?? 5;
     const topicCount = content
       .split("\\n")
@@ -167,7 +201,26 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       return Response.json({ ok: false, error: error.message }, { status: 502 });
     }
 
-    return Response.json({ ok: true, topics: data?.[0] ?? null });
+    // Increment daily submission counter
+    try {
+      await supabase
+        .from("users")
+        .update({
+          daily_submission_count: currentDailyCount + 1,
+          last_submission_date: today,
+        })
+        .eq("id", userRow.id);
+    } catch (countErr) {
+      console.warn("[Entries API] Could not update daily_submission_count:", countErr);
+    }
+
+    const remaining = Math.max(0, maxDailySubmissions - (currentDailyCount + 1));
+    return Response.json({
+      ok: true,
+      topics: data?.[0] ?? null,
+      remaining_daily_submissions: remaining,
+      daily_submission_count: currentDailyCount + 1,
+    });
   } catch (e: unknown) {
     const message =
       e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";

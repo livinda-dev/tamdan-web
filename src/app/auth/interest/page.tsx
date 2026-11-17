@@ -41,6 +41,8 @@ export default function AuthInterestPage() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   // Dynamic topic limit fetched from the server (admin-controlled per user)
   const [topicLimit, setTopicLimit] = useState(5);
+  // Daily submission quota (max 3 times per day)
+  const [remainingDailySubmissions, setRemainingDailySubmissions] = useState<number | null>(null);
 
   const fetchEntries = async (token: string) => {
     try {
@@ -54,6 +56,9 @@ export default function AuthInterestPage() {
         // Read the admin-controlled per-user topic limit
         if (typeof json.topic_limit === "number" && json.topic_limit >= 1) {
           setTopicLimit(json.topic_limit);
+        }
+        if (typeof json.remaining_daily_submissions === "number") {
+          setRemainingDailySubmissions(json.remaining_daily_submissions);
         }
         const dbContent = json.title || ""; // comma separated from DB
         setSavedContent(dbContent);
@@ -146,30 +151,46 @@ export default function AuthInterestPage() {
       return;
     }
 
-    // setSubmitting(true); // show loading overlay
+    // ❌ Block if user already used their 3 submissions today
+    if (remainingDailySubmissions !== null && remainingDailySubmissions <= 0) {
+      setAlertText(
+        "⚠️ Daily limit reached!\nYou can only submit topics up to 3 times per day to prevent spam. Please come back tomorrow."
+      );
+      setAlertStatus("error");
+      setIsAlertOpen(true);
+      return;
+    }
 
-    // for (const topic of arrayContent) {
-    //   const res = await fetch("/api/moderate-topic", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ topic }),
-    //   });
-
-    //   const json = await res.json();
-
-    //   if (json.status === "UNSAFE") {
-    //     setSubmitting(false); // hide loading
-    //     setAlertText(
-    //       `❌ Topic not allowed:\n"${topic}"\n\nReason: ${json.reason}`
-    //     );
-    //     setAlertStatus("error");
-    //     setIsAlertOpen(true);
-    //     return;
-    //   }
-    // }
-
-    // setSubmitting(true);
+    setSubmitting(true); // show loading overlay
     setStatus(null);
+
+    // Run topic moderation check using OpenRouter
+    for (const topic of arrayContent) {
+      try {
+        const res = await fetch("/api/moderate-topic", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ topic }),
+        });
+
+        const json = await res.json();
+
+        if (json.status === "UNSAFE") {
+          setSubmitting(false); // hide loading
+          setAlertText(
+            `❌ Topic not allowed:\n"${topic}"\n\nReason: ${json.reason || "Content flagged by moderation."}`
+          );
+          setAlertStatus("error");
+          setIsAlertOpen(true);
+          return;
+        }
+      } catch (modErr) {
+        console.error("Moderation check error:", modErr);
+      }
+    }
 
     try {
       const res = await fetch("/api/entries", {
@@ -184,9 +205,15 @@ export default function AuthInterestPage() {
       const json = await res.json();
       if (!res.ok || !json.ok) {
         setStatus(json.error || "Failed to submit");
+        setAlertText(json.error || "Failed to submit topics.");
+        setAlertStatus("error");
+        setIsAlertOpen(true);
       } else {
         setStatus("Submitted successfully!");
         setSavedContent(arrayContent.join("\n"));
+        if (typeof json.remaining_daily_submissions === "number") {
+          setRemainingDailySubmissions(json.remaining_daily_submissions);
+        }
         setAlertText("✅ Topics submitted successfully!");
         setAlertStatus("success");
         setIsAlertOpen(true);
@@ -303,6 +330,22 @@ export default function AuthInterestPage() {
             />
 
             <GenerateAgentButton submitting={submitting} onSubmit={onSubmit} />
+          </div>
+
+          {/* Submission quota & topic limit indicators */}
+          <div className="flex justify-between items-center text-xs mt-2 px-1 text-gray-500">
+            <span>Limit: up to {topicLimit} topics</span>
+            {remainingDailySubmissions !== null && (
+              <span
+                className={`font-medium ${
+                  remainingDailySubmissions === 0
+                    ? "text-red-500 font-bold"
+                    : "text-gray-600"
+                }`}
+              >
+                Daily submissions left: {remainingDailySubmissions} / 3
+              </span>
+            )}
           </div>
         </form>
         <div className="flex justify-center mt-2 sm:mt-3 md:mt-4">
