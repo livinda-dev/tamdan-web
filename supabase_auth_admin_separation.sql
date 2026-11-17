@@ -17,6 +17,10 @@ ALTER TABLE IF EXISTS public.admin
   ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true,
   ADD COLUMN IF NOT EXISTS phone_number TEXT;
 
+-- Make password column optional on public.admin (Supabase Auth manages credentials in auth.users)
+ALTER TABLE IF EXISTS public.admin
+  ALTER COLUMN password DROP NOT NULL;
+
 -- Ensure `role` exists on public.users
 ALTER TABLE IF EXISTS public.users
   ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user',
@@ -163,27 +167,42 @@ CREATE POLICY "Allow public insert into users"
 -- ------------------------------------------------------------------------------
 -- 5. Helper Stored Procedure: Upsert Admin User
 -- Example usage in SQL Editor:
---   SELECT public.upsert_admin_user('admin@example.com', 'SuperAdmin', 'superadmin', '+85512345678');
+--   SELECT public.upsert_admin_user('tamdan.web@gmail.com', 'Chanda', 'superadmin');
 -- ------------------------------------------------------------------------------
+
+-- Drop any previous overloaded signatures to avoid ambiguity
+DROP FUNCTION IF EXISTS public.upsert_admin_user(TEXT, TEXT, TEXT, TEXT);
+DROP FUNCTION IF EXISTS public.upsert_admin_user(TEXT, TEXT, TEXT, TEXT, TEXT);
+DROP FUNCTION IF EXISTS public.upsert_admin_user;
 
 CREATE OR REPLACE FUNCTION public.upsert_admin_user(
   p_email TEXT,
   p_username TEXT,
   p_role TEXT DEFAULT 'admin',
-  p_phone TEXT DEFAULT NULL
+  p_phone TEXT DEFAULT NULL,
+  p_password TEXT DEFAULT NULL
 )
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  INSERT INTO public.admin (email, username, role, phone_number, is_active, created_at)
-  VALUES (LOWER(TRIM(p_email)), TRIM(p_username), LOWER(TRIM(p_role)), p_phone, true, NOW())
+  INSERT INTO public.admin (email, username, role, phone_number, password, is_active, created_at)
+  VALUES (
+    LOWER(TRIM(p_email)),
+    TRIM(p_username),
+    LOWER(TRIM(p_role)),
+    p_phone,
+    COALESCE(p_password, ''),
+    true,
+    NOW()
+  )
   ON CONFLICT (email)
   DO UPDATE SET
     username = EXCLUDED.username,
     role = EXCLUDED.role,
     phone_number = COALESCE(EXCLUDED.phone_number, public.admin.phone_number),
+    password = CASE WHEN p_password IS NOT NULL THEN p_password ELSE public.admin.password END,
     is_active = true;
 END;
 $$;
