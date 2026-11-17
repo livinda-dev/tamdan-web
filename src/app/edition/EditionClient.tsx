@@ -12,7 +12,8 @@ type Article = {
   summary: string;
   source_name: string;
   article_title: string;
-  image: string;
+  image?: string | null;
+  image_url?: string | null;
 };
 
 type NewsTopic = {

@@ -6,7 +6,8 @@ type Article = {
   summary: string;
   source_name: string;
   article_title: string;
-  image:string;
+  image?: string | null;
+  image_url?: string | null;
 };
 
 type NewsTopic = {
@@ -61,25 +62,46 @@ export default function NewsModal({ topic, onClose }: Props) {
         </div>
         <p className="text-gray-600 mb-6">{topic.section_summary}</p>
         <div className="space-y-6">
-          {topic.articles.map((article, index) => (
-            <div key={index} className="border-t pt-4">
-              <h3 className="font-semibold text-lg">{article.article_title}</h3>
-              {article.image && <img src={article.image} alt={article.article_title} className="w-full h-auto mt-2 mb-2"/>}
-              <p className="text-sm text-gray-500 mt-1">
-                Source: {article.source_name}
-              </p>
-              <p className="mt-2">{article.summary}</p>
-              <a
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-color hover:underline mt-2 inline-block underline text-blue-600"
-                
-              >
-                Read Full Article
-              </a>
-            </div>
-          ))}
+          {topic.articles.map((article, index) => {
+            const imageUrl = article.image || article.image_url;
+            return (
+              <div key={index} className="border-t pt-4">
+                <h3 className="font-semibold text-lg">{article.article_title}</h3>
+                {imageUrl && (
+                  <img
+                    src={imageUrl}
+                    alt={article.article_title}
+                    className="w-full max-h-72 object-cover rounded-lg mt-3 mb-3 border border-gray-100 shadow-sm"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                  />
+                )}
+                <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                  {article.source_name && (
+                    <img
+                      src={`https://www.google.com/s2/favicons?domain=${article.source_name}&sz=32`}
+                      alt=""
+                      className="w-4 h-4 rounded-sm inline-block"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  )}
+                  <span>Source: {article.source_name}</span>
+                </div>
+                <p className="mt-2 text-gray-700">{article.summary}</p>
+                <a
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-color hover:underline mt-2 inline-block underline text-blue-600 text-sm font-medium"
+                >
+                  Read Full Article
+                </a>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
