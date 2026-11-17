@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import Divider from "@/components/divider";
 import MyMarquee from "./marquee";
 import { DEFAULT_SITE_SETTINGS, SiteSettings } from "@/types/settings";
@@ -59,6 +60,17 @@ export default function Footer() {
         </div>
 
         <Divider />
+
+        {/* Public Legal Links */}
+        <div className="flex justify-center items-center gap-4 sm:gap-6 mt-4 text-xs font-[TamdanRegular] text-gray-200">
+          <Link href="/privacy" className="hover:underline hover:text-white transition">
+            Privacy Policy
+          </Link>
+          <span>•</span>
+          <Link href="/terms" className="hover:underline hover:text-white transition">
+            Terms of Service
+          </Link>
+        </div>
 
         {/* Footer Logo and Copyright */}
         <div className="text-center mt-6 space-y-2">
