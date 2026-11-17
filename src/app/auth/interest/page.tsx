@@ -146,30 +146,36 @@ export default function AuthInterestPage() {
       return;
     }
 
-    // setSubmitting(true); // show loading overlay
-
-    // for (const topic of arrayContent) {
-    //   const res = await fetch("/api/moderate-topic", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ topic }),
-    //   });
-
-    //   const json = await res.json();
-
-    //   if (json.status === "UNSAFE") {
-    //     setSubmitting(false); // hide loading
-    //     setAlertText(
-    //       `❌ Topic not allowed:\n"${topic}"\n\nReason: ${json.reason}`
-    //     );
-    //     setAlertStatus("error");
-    //     setIsAlertOpen(true);
-    //     return;
-    //   }
-    // }
-
-    // setSubmitting(true);
+    setSubmitting(true); // show loading overlay
     setStatus(null);
+
+    // Run topic moderation check using OpenRouter
+    for (const topic of arrayContent) {
+      try {
+        const res = await fetch("/api/moderate-topic", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ topic }),
+        });
+
+        const json = await res.json();
+
+        if (json.status === "UNSAFE") {
+          setSubmitting(false); // hide loading
+          setAlertText(
+            `❌ Topic not allowed:\n"${topic}"\n\nReason: ${json.reason || "Content flagged by moderation."}`
+          );
+          setAlertStatus("error");
+          setIsAlertOpen(true);
+          return;
+        }
+      } catch (modErr) {
+        console.error("Moderation check error:", modErr);
+      }
+    }
 
     try {
       const res = await fetch("/api/entries", {

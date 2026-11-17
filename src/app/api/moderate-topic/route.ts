@@ -84,7 +84,7 @@ async function handlePost(request: NextRequest, _claims: JwtClaims): Promise<Res
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "baidu/ernie-5.5-flash-preview:free",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: `Topic: "${topic}"` },
@@ -103,15 +103,18 @@ async function handlePost(request: NextRequest, _claims: JwtClaims): Promise<Res
     }
 
     const result = await response.json();
-    const raw = result.choices[0].message.content.trim();
+    const raw = (result?.choices?.[0]?.message?.content || "").trim();
+
+    // Clean markdown code fence if returned
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
     // Try 1 → Pure JSON
     try {
-      return NextResponse.json(JSON.parse(raw));
+      return NextResponse.json(JSON.parse(cleaned));
     } catch {}
 
     // Try 2 → Extract { ... }
-    const match = raw.match(/\{[\s\S]*\}/);
+    const match = cleaned.match(/\{[\s\S]*\}/);
     if (match) {
       try {
         return NextResponse.json(JSON.parse(match[0]));
