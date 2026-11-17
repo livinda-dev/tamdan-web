@@ -51,7 +51,7 @@ export default function NavBar() {
       localStorage.removeItem("username");
       localStorage.removeItem("user");
       localStorage.removeItem("phone_number");
-    } catch {}
+    } catch { }
     setIsLoggedIn(false);
     router.replace("/");
   };
@@ -132,7 +132,7 @@ export default function NavBar() {
           );
           setUserEmail(claims?.email ?? null);
           setUserName(claims?.name ?? null);
-        } catch {}
+        } catch { }
       }
     }
 
@@ -180,7 +180,7 @@ export default function NavBar() {
 
       if (json.ok && json.token) {
         // NEXT_PUBLIC_TELEGRAM_BOT_USERNAME must be set in .env.local
-        window.open(`https://t.me/livindabot?start=${json.token}`, "_blank");
+        window.open(`https://t.me/tam_dan_news_bot?start=${json.token}`, "_blank");
         setIsDropdownOpen(false);
       } else {
         alert("Failed to generate connection link. Please try again.");
@@ -207,8 +207,7 @@ export default function NavBar() {
   }, [dropdownRef]);
 
   const linkClass = (path: string) =>
-    `px-2 md:px-3 py-2 text-xs md:text-sm font-medium ${
-      pathname === path ? " underline text-color" : "text-color"
+    `px-2 md:px-3 py-2 text-xs md:text-sm font-medium ${pathname === path ? " underline text-color" : "text-color"
     }`;
 
   return (
@@ -386,24 +385,24 @@ export default function NavBar() {
                 {
                   userChatId ? (
                     <button
-                  onClick={() => {
-                    handleTelegramConnect();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
-                >
-                  Go to Telegram Bot
-                </button>
-                  ):(
+                      onClick={() => {
+                        handleTelegramConnect();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
+                    >
+                      Go to Telegram Bot
+                    </button>
+                  ) : (
                     <button
-                  onClick={() => {
-                    handleTelegramConnect();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
-                >
-                  Connect Telegram
-                </button>
+                      onClick={() => {
+                        handleTelegramConnect();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-color"
+                    >
+                      Connect Telegram
+                    </button>
                   )
                 }
                 <button
