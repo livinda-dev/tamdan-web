@@ -3,8 +3,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | Tamdan",
+  title: "Terms of Service",
   description: "Terms of Service for Tamdan - AI News Automation & Digest Service",
+  alternates: {
+    canonical: "https://tamdan.online/terms",
+  },
 };
 
 export default function TermsOfServicePage() {
@@ -27,7 +30,7 @@ export default function TermsOfServicePage() {
           <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
             By accessing or using <strong>Tamdan</strong> (&quot;the Service&quot;), hosted at{" "}
             <Link href="/" className="text-blue-600 hover:underline">
-              tamdan-web.vercel.app
+              tamdan.online
             </Link>{" "}
             or associated domains, you agree to be bound by these Terms of Service. If you do not agree to all terms and conditions, you must not access or use our Service.
           </p>
