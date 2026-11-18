@@ -3,8 +3,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Tamdan",
+  title: "Privacy Policy",
   description: "Privacy Policy for Tamdan - AI News Automation & Digest Service",
+  alternates: {
+    canonical: "https://tamdan.online/privacy",
+  },
 };
 
 export default function PrivacyPolicyPage() {
@@ -27,9 +30,8 @@ export default function PrivacyPolicyPage() {
           <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
             Welcome to <strong>Tamdan</strong> (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;), available at{" "}
             <Link href="/" className="text-blue-600 hover:underline">
-              tamdan-web.vercel.app
-            </Link>{" "}
-            (or tamdan.co). Tamdan is an AI-powered automated news curation and digest service. We respect your privacy and are committed to protecting the personal information you share with us.
+              tamdan.online
+            </Link>. Tamdan is an AI-powered automated news curation and digest service. We respect your privacy and are committed to protecting the personal information you share with us.
           </p>
           <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
             This Privacy Policy outlines how we collect, use, disclose, and safeguard your data when you use our website, application, and Telegram notification services.
