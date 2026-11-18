@@ -28,6 +28,7 @@ export default function NavBar() {
   const [logoUrl, setLogoUrl] = useState<string>("/image/LogoTamdan.png");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -38,6 +39,7 @@ export default function NavBar() {
   // Must use NEXT_PUBLIC_ prefix so the value is available in the browser bundle
   const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
   const handleOpenGoogle = () => {
+    setAuthError(null);
     setIsGoogleModalOpen(true);
   };
 
@@ -74,6 +76,20 @@ export default function NavBar() {
     return () => {
       isMounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("auth_error");
+      if (err) {
+        setAuthError(decodeURIComponent(err));
+        setIsGoogleModalOpen(true);
+        // Clean up URL parameter without page reload
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -433,7 +449,11 @@ export default function NavBar() {
       </div>
       <GoogleSignInModal
         isOpen={isGoogleModalOpen}
-        onClose={() => setIsGoogleModalOpen(false)}
+        onClose={() => {
+          setIsGoogleModalOpen(false);
+          setAuthError(null);
+        }}
+        initialError={authError}
       />
     </nav>
   );

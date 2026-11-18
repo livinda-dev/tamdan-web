@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { isValidEmailFormat, hashPassword, createJwtToken } from "@/lib/auth";
+import { isValidEmailFormat, hashPassword } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     // 1. Check if user with email already exists in users table
     const { data: existingUser, error: checkErr } = await supabase
       .from("users")
-      .select("email")
+      .select("id, email, auth_provider, password")
       .eq("email", email)
       .maybeSingle();
 
@@ -59,14 +59,30 @@ export async function POST(req: NextRequest) {
       console.error("[SignUp] Check user error:", checkErr.message);
     }
 
+    // 1.1 Strict Provider Separation: If registered with Google, block email/password signup
     if (existingUser) {
+      if (
+        existingUser.auth_provider === "google" ||
+        (!existingUser.password && existingUser.auth_provider !== "credentials")
+      ) {
+        return Response.json(
+          {
+            ok: false,
+            error:
+              "This email was registered using Google Sign-In. Please sign in using the 'Continue with Google' button.",
+            auth_provider: "google",
+          },
+          { status: 409 }
+        );
+      }
+
       return Response.json(
         { ok: false, error: "An account with this email already exists. Please log in." },
         { status: 409 }
       );
     }
 
-    // 1.2 Check if user with phone number already exist in users table
+    // 1.2 Check if user with phone number already exists in users table
     const { data: existingUserPhone, error: checkErrPhone } = await supabase
       .from("users")
       .select("phone_number")
@@ -95,6 +111,8 @@ export async function POST(req: NextRequest) {
         email,
         phone_number,
         password: hashedPassword,
+        auth_provider: "credentials",
+        is_verified: false,
         created_at,
       })
       .select()
@@ -108,45 +126,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2.1 Sync into Supabase Auth (auth.users) so user appears in Supabase dashboard
-    // Explicitly set role: 'user' to ensure separation from administrator accounts
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      try {
-        await supabase.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-          user_metadata: { username, phone_number, role: "user" },
-          app_metadata: { role: "user" },
-        });
-      } catch (authCreateErr) {
-        console.warn("[SignUp] Supabase auth user creation warning:", authCreateErr);
+    // 3. Trigger email confirmation using Supabase Auth
+    const siteUrl = req.nextUrl.origin || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    let emailSent = false;
+
+    try {
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || supabaseKey;
+      const authClient = createClient(supabaseUrl, anonKey, {
+        auth: { persistSession: false },
+      });
+
+      const { data: authData, error: authErr } = await authClient.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${siteUrl}/auth/callback`,
+          data: {
+            username,
+            phone_number,
+            role: "user",
+          },
+        },
+      });
+
+      if (authErr) {
+        console.warn("[SignUp] Supabase auth.signUp warning:", authErr.message);
+      } else {
+        emailSent = true;
       }
+    } catch (authCreateErr) {
+      console.warn("[SignUp] Supabase auth creation exception:", authCreateErr);
     }
-
-    const userId = newUser?.id || email;
-    const now = Math.floor(Date.now() / 1000);
-    const token = createJwtToken({
-      sub: userId,
-      email,
-      name: username,
-      phone_number,
-      iat: now,
-      exp: now + 30 * 24 * 60 * 60,
-    });
-
-    const sessionObj = {
-      token_type: "Bearer",
-      access_token: token,
-      id_token: token,
-      expires_in: 2592000,
-    };
 
     return Response.json({
       ok: true,
-      session: sessionObj,
+      requires_verification: true,
+      emailSent,
+      message:
+        "Account created! A confirmation link has been sent to your email. Please check your inbox and click the link to verify your email before signing in.",
       user: {
-        id: userId,
+        id: newUser?.id || email,
         username,
         email,
         phone_number,
