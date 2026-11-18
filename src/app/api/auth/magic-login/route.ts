@@ -76,6 +76,12 @@ export async function POST(req: NextRequest) {
         );
       }
       user = newUser;
+    } else {
+      // Mark existing user as verified when they click the confirmation / magic link
+      await supabase
+        .from("users")
+        .update({ is_verified: true })
+        .eq("email", email);
     }
 
     const username = user?.username || email.split("@")[0];

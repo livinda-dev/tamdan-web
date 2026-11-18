@@ -57,22 +57,49 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Verify password against hashed password in database
-    if (user.password) {
-      const isMatch = verifyPassword(password, user.password);
-      if (!isMatch) {
-        return Response.json(
-          { ok: false, error: "Incorrect password. Please try again." },
-          { status: 401 }
-        );
-      }
-    } else {
-      // If user row existed (e.g. created previously without password), set the password now
-      const hashedPassword = hashPassword(password);
-      await supabase
-        .from("users")
-        .update({ password: hashedPassword })
-        .eq("email", email);
+    // 2. Strict Provider Separation: If registered with Google, block password login
+    if (
+      user.auth_provider === "google" ||
+      (!user.password && user.auth_provider !== "credentials")
+    ) {
+      return Response.json(
+        {
+          ok: false,
+          error:
+            "This email was registered using Google Sign-In. Please sign in using the 'Continue with Google' button.",
+          auth_provider: "google",
+        },
+        { status: 400 }
+      );
+    }
+
+    // 3. Verify password
+    if (!user.password) {
+      return Response.json(
+        { ok: false, error: "No password set for this account. Please sign in with Google." },
+        { status: 400 }
+      );
+    }
+
+    const isMatch = verifyPassword(password, user.password);
+    if (!isMatch) {
+      return Response.json(
+        { ok: false, error: "Incorrect password. Please try again." },
+        { status: 401 }
+      );
+    }
+
+    // 4. Verify email confirmation status
+    if (user.is_verified === false) {
+      return Response.json(
+        {
+          ok: false,
+          error:
+            "Please confirm your email address before signing in. Check your inbox for the verification link.",
+          requires_verification: true,
+        },
+        { status: 403 }
+      );
     }
 
     const username = user.username || email.split("@")[0];

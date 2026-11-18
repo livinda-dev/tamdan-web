@@ -134,35 +134,55 @@ export async function GET(req: NextRequest) {
         });
 
         const email = googleUser.email ?? null;
+        if (!email) {
+          return new Response("Missing email from Google OAuth profile", { status: 400 });
+        }
+
+        // Check if user already exists in the database
+        const { data: existingUser, error: findErr } = await supabase
+          .from("users")
+          .select("id, email, auth_provider, password, created_at")
+          .eq("email", email)
+          .maybeSingle();
+
+        // 1. Strict Provider Separation: If registered with Email & Password, reject Google login
+        if (
+          existingUser &&
+          (existingUser.auth_provider === "credentials" ||
+            (existingUser.password && existingUser.auth_provider !== "google"))
+        ) {
+          const errorMsg = encodeURIComponent(
+            "This email was registered with Email & Password. Please sign in using your password instead of Google."
+          );
+          return Response.redirect(`${siteUrl}/?auth_error=${errorMsg}`, 302);
+        }
+
         const baseName = (googleUser.name || (email ? email.split("@")[0] : "Google User")).trim();
         const username = baseName.substring(0, 100) || "Google User";
 
-        const payload: { username: string; email: string | null;  created_at: string } = {
+        const payload: {
+          username: string;
+          email: string;
+          auth_provider: string;
+          is_verified: boolean;
+          created_at: string;
+        } = {
           username,
           email,
-          created_at: new Date().toISOString(),
+          auth_provider: "google",
+          is_verified: true,
+          created_at: existingUser?.created_at || new Date().toISOString(),
         };
 
-        if (email) {
-          const { data, error } = await supabase
-            .from("users")
-            .upsert(payload, { onConflict: "email" })
-            .select();
-          if (error) {
-            console.error("[OAuth Callback] Supabase upsert error:", error.message);
-          } else {
-            console.log("[OAuth Callback] Supabase upsert success", { rows: data?.length || 0, user: data?.[0] });
-          }
+        const { data, error } = await supabase
+          .from("users")
+          .upsert(payload, { onConflict: "email" })
+          .select();
+
+        if (error) {
+          console.error("[OAuth Callback] Supabase upsert error:", error.message);
         } else {
-          const { data, error } = await supabase
-            .from("users")
-            .insert(payload)
-            .select();
-          if (error) {
-            console.error("[OAuth Callback] Supabase insert error:", error.message);
-          } else {
-            console.log("[OAuth Callback] Supabase insert success", { rows: data?.length || 0, user: data?.[0] });
-          }
+          console.log("[OAuth Callback] Supabase upsert success", { rows: data?.length || 0, user: data?.[0] });
         }
       }
     } catch (e) {
