@@ -255,15 +255,25 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "User-Agent": "Tamdan-Web/1.0",
               ...(authHeader ? { Authorization: authHeader } : {}),
             },
             body: JSON.stringify(n8nPayload),
           });
 
+          let responseBody: string | undefined;
+          try {
+            const rawText = await n8nRes.text();
+            responseBody = rawText ? rawText.slice(0, 500) : undefined;
+          } catch {
+            // ignore
+          }
+
           webhookStatus = {
             ok: n8nRes.ok,
             status: n8nRes.status,
             topic_id: topicRecordId,
+            ...(responseBody ? { response_message: responseBody } : {}),
           };
         } catch (webhookErr) {
           console.error("[Entries API] n8n webhook error:", webhookErr);
