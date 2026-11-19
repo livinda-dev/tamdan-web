@@ -194,9 +194,14 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       return Response.json({ ok: false, error: chckError.message }, { status: 502 });
     }
 
+    let isFirstTime = false;
     let data;
     let error;
     if (existingTitle) {
+      // If an existing title record exists but was empty, treat as first time
+      if (!existingTitle.topic || existingTitle.topic.trim() === "") {
+        isFirstTime = true;
+      }
       const updateResult = await supabase
         .from("topics")
         .update({ topic: content })
@@ -205,6 +210,8 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       data = updateResult.data;
       error = updateResult.error;
     } else {
+      // Brand new user topic record
+      isFirstTime = true;
       const insertResult = await supabase.from("topics").insert(insertPayload).select();
       data = insertResult.data;
       error = insertResult.error;
@@ -228,7 +235,7 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       console.warn("[Entries API] Could not update daily_submission_count:", countErr);
     }
 
-    // 3. Trigger n8n Webhook with topic_id
+    // 3. Trigger n8n Webhook ONLY on first-time topic submission
     const authHeader = req.headers.get("authorization") || "";
     const n8nWebhookUrl =
       process.env.N8N_WEBHOOK_URL ||
@@ -236,35 +243,44 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
 
     const topicRecordId = data?.[0]?.id || existingTitle?.id || null;
 
-    let webhookStatus: { ok: boolean; status?: number; error?: string; topic_id?: string | number } | null = null;
-    if (topicRecordId && n8nWebhookUrl) {
-      try {
-        const n8nPayload = {
-          topic_id: topicRecordId,
-        };
+    let webhookStatus: { ok: boolean; status?: number; error?: string; topic_id?: string | number; skipped?: boolean } | null = null;
+    if (isFirstTime) {
+      if (topicRecordId && n8nWebhookUrl) {
+        try {
+          const n8nPayload = {
+            topic_id: topicRecordId,
+          };
 
-        const n8nRes = await fetch(n8nWebhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(authHeader ? { Authorization: authHeader } : {}),
-          },
-          body: JSON.stringify(n8nPayload),
-        });
+          const n8nRes = await fetch(n8nWebhookUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(authHeader ? { Authorization: authHeader } : {}),
+            },
+            body: JSON.stringify(n8nPayload),
+          });
 
-        webhookStatus = {
-          ok: n8nRes.ok,
-          status: n8nRes.status,
-          topic_id: topicRecordId,
-        };
-      } catch (webhookErr) {
-        console.error("[Entries API] n8n webhook error:", webhookErr);
-        webhookStatus = {
-          ok: false,
-          error: webhookErr instanceof Error ? webhookErr.message : String(webhookErr),
-          topic_id: topicRecordId,
-        };
+          webhookStatus = {
+            ok: n8nRes.ok,
+            status: n8nRes.status,
+            topic_id: topicRecordId,
+          };
+        } catch (webhookErr) {
+          console.error("[Entries API] n8n webhook error:", webhookErr);
+          webhookStatus = {
+            ok: false,
+            error: webhookErr instanceof Error ? webhookErr.message : String(webhookErr),
+            topic_id: topicRecordId,
+          };
+        }
       }
+    } else {
+      // Subsequent submissions: Skip webhook trigger
+      webhookStatus = {
+        ok: true,
+        skipped: true,
+        topic_id: topicRecordId,
+      };
     }
 
     const remaining = Math.max(0, maxDailySubmissions - (currentDailyCount + 1));
@@ -273,7 +289,8 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       topics: data?.[0] ?? null,
       remaining_daily_submissions: remaining,
       daily_submission_count: currentDailyCount + 1,
-      webhook_triggered: !!webhookStatus?.ok,
+      is_first_submission: isFirstTime,
+      webhook_triggered: isFirstTime && !!webhookStatus?.ok && !webhookStatus?.skipped,
       webhook_status: webhookStatus,
     });
   } catch (e: unknown) {
