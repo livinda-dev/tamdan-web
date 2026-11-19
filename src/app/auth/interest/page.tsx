@@ -43,6 +43,42 @@ export default function AuthInterestPage() {
   const [topicLimit, setTopicLimit] = useState(5);
   // Daily submission quota (max 3 times per day)
   const [remainingDailySubmissions, setRemainingDailySubmissions] = useState<number | null>(null);
+  // Telegram connection check
+  const [hasTelegram, setHasTelegram] = useState<boolean | null>(null);
+  const [telegramPromptOpen, setTelegramPromptOpen] = useState(false);
+  const [connectingTelegram, setConnectingTelegram] = useState(false);
+
+  const handleConnectTelegram = async () => {
+    if (!idToken) return;
+    setConnectingTelegram(true);
+
+    // Ping Render bot in background to wake it up if asleep
+    fetch("https://news-pro-5cab.onrender.com/", { mode: "no-cors" }).catch(() => {});
+
+    try {
+      const res = await fetch("/api/bots/generate-telegram-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      const json = await res.json();
+      if (json.ok && json.token) {
+        window.open(`https://t.me/tam_dan_news_bot?start=${json.token}`, "_blank");
+        setTelegramPromptOpen(false);
+      } else {
+        alert(json.error || "Failed to generate Telegram connect link.");
+      }
+    } catch (err) {
+      console.error("Telegram connect error:", err);
+      alert("Failed to connect Telegram. Please try again.");
+    } finally {
+      setConnectingTelegram(false);
+    }
+  };
 
   const fetchEntries = async (token: string) => {
     try {
@@ -59,6 +95,9 @@ export default function AuthInterestPage() {
         }
         if (typeof json.remaining_daily_submissions === "number") {
           setRemainingDailySubmissions(json.remaining_daily_submissions);
+        }
+        if (typeof json.has_telegram === "boolean") {
+          setHasTelegram(json.has_telegram);
         }
         const dbContent = json.title || ""; // comma separated from DB
         setSavedContent(dbContent);
@@ -161,6 +200,12 @@ export default function AuthInterestPage() {
       return;
     }
 
+    // ❌ Block if user has not connected Telegram yet
+    if (hasTelegram === false) {
+      setTelegramPromptOpen(true);
+      return;
+    }
+
     setSubmitting(true); // show loading overlay
     setStatus(null);
 
@@ -204,6 +249,11 @@ export default function AuthInterestPage() {
 
       const json = await res.json();
       if (!res.ok || !json.ok) {
+        if (json.requires_telegram) {
+          setHasTelegram(false);
+          setTelegramPromptOpen(true);
+          return;
+        }
         setStatus(json.error || "Failed to submit");
         setAlertText(json.error || "Failed to submit topics.");
         setAlertStatus("error");
@@ -213,6 +263,9 @@ export default function AuthInterestPage() {
         setSavedContent(arrayContent.join("\n"));
         if (typeof json.remaining_daily_submissions === "number") {
           setRemainingDailySubmissions(json.remaining_daily_submissions);
+        }
+        if (typeof json.has_telegram === "boolean") {
+          setHasTelegram(json.has_telegram);
         }
         setAlertText("✅ Topics submitted successfully!");
         setAlertStatus("success");
@@ -363,6 +416,40 @@ export default function AuthInterestPage() {
         isOpen={isALertOpen}
         onClose={() => setIsAlertOpen(false)}
       />
+
+      {/* Telegram Not Connected Modal Prompt */}
+      {telegramPromptOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 px-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl p-6 sm:p-8 text-center border border-gray-200 shadow-2xl animate-fadeIn space-y-4">
+            <div className="w-16 h-16 bg-sky-50 border border-sky-100 rounded-full flex items-center justify-center mx-auto text-[#0088cc]">
+              <svg className="w-8 h-8 fill-current text-[#0088cc]" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-[#00355A]">Connect Telegram First</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              You must connect your account to our Telegram bot first so we can deliver your personalized news digests to your Telegram.
+            </p>
+            <div className="pt-2 space-y-2">
+              <button
+                type="button"
+                onClick={handleConnectTelegram}
+                disabled={connectingTelegram}
+                className="w-full bg-[#0088cc] hover:bg-[#0077b5] text-white font-semibold py-2.5 rounded-lg text-sm transition shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                {connectingTelegram ? "Connecting..." : "Connect Telegram Bot"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTelegramPromptOpen(false)}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-lg text-sm transition cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {submitting && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
