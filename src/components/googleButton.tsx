@@ -23,6 +23,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialError }) 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendStatus, setResendStatus] = useState<{ ok: boolean; msg: string } | null>(null);
 
   useEffect(() => {
     if (initialError) {
@@ -46,6 +48,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialError }) 
     setEmailError(null);
     setGeneralError(null);
     setSuccessMessage(null);
+    setResendStatus(null);
     setMode("signin");
     setLoading(false);
     setGoogleLoading(false);
@@ -145,6 +148,38 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialError }) 
       setGeneralError(err instanceof Error ? err.message : "Failed to send magic link.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) return;
+    setResendLoading(true);
+    setResendStatus(null);
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setResendStatus({
+          ok: true,
+          msg: data.message || "Verification email resent! Please check your inbox and Spam folder.",
+        });
+      } else {
+        setResendStatus({
+          ok: false,
+          msg: data.error || "Failed to resend confirmation email.",
+        });
+      }
+    } catch {
+      setResendStatus({
+        ok: false,
+        msg: "Network error trying to resend email. Please try again.",
+      });
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -272,18 +307,45 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialError }) 
             </div>
             <h3 className="text-xl font-bold text-[#00355A]">Check Your Inbox!</h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              We have sent an email confirmation link to <strong className="text-[#00355A]">{email}</strong>.
+              We sent an email verification link to <strong className="text-[#00355A]">{email}</strong>.
             </p>
-            <p className="text-xs text-gray-500 leading-relaxed bg-blue-50/60 p-3 rounded-lg border border-blue-100">
-              Please click the link in your email to verify that your email is real before signing in.
-            </p>
-            <div className="pt-2">
+            <div className="text-xs text-gray-600 leading-relaxed bg-amber-50/70 p-3 rounded-lg border border-amber-200/80 text-left space-y-1">
+              <p className="font-semibold text-amber-900">Didn&apos;t see the email?</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-amber-800">
+                <li>Check your <strong>Spam</strong> or <strong>Junk</strong> folder.</li>
+                <li>Wait 1–2 minutes for delivery.</li>
+                <li>Or click below to resend.</li>
+              </ul>
+            </div>
+
+            {resendStatus && (
+              <div
+                className={`p-3 rounded-lg text-xs text-left ${
+                  resendStatus.ok
+                    ? "bg-green-50 text-green-800 border border-green-200"
+                    : "bg-red-50 text-red-800 border border-red-200"
+                }`}
+              >
+                {resendStatus.msg}
+              </div>
+            )}
+
+            <div className="pt-2 space-y-2">
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendLoading}
+                className="w-full bg-white border border-gray-300 text-[#00355A] font-semibold py-2.5 rounded-lg text-sm hover:bg-gray-50 transition cursor-pointer disabled:opacity-50"
+              >
+                {resendLoading ? "Resending..." : "Resend Verification Email"}
+              </button>
               <button
                 type="button"
                 onClick={() => {
                   setMode("signin");
                   setGeneralError(null);
                   setSuccessMessage(null);
+                  setResendStatus(null);
                 }}
                 className="w-full bg-[#00355A] text-white font-semibold py-2.5 rounded-lg text-sm hover:opacity-95 transition cursor-pointer"
               >

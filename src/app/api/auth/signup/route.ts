@@ -129,6 +129,7 @@ export async function POST(req: NextRequest) {
     // 3. Trigger email confirmation using Supabase Auth
     const siteUrl = req.nextUrl.origin || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     let emailSent = false;
+    let authWarning: string | null = null;
 
     try {
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || supabaseKey;
@@ -150,20 +151,50 @@ export async function POST(req: NextRequest) {
       });
 
       if (authErr) {
-        console.warn("[SignUp] Supabase auth.signUp warning:", authErr.message);
+        console.error("[SignUp] Supabase auth.signUp error:", authErr.message);
+        authWarning = authErr.message;
+        // Rollback inserted user from public.users so they aren't trapped in unverified limbo
+        await supabase.from("users").delete().eq("email", email);
+        return Response.json(
+          {
+            ok: false,
+            error: `Failed to send verification email: ${authErr.message}. (If you tested recently, you may have hit the Supabase 3 emails/hour rate limit or check Supabase Auth Logs).`,
+          },
+          { status: 400 }
+        );
       } else {
-        emailSent = true;
+        // If user already existed in auth.users, Supabase returns identities: [] and does not send an email
+        if (authData?.user?.identities && authData.user.identities.length === 0) {
+          console.log("[SignUp] User already existed in auth.users, triggering resend...");
+          const { error: resendErr } = await authClient.auth.resend({
+            type: "signup",
+            email,
+            options: {
+              emailRedirectTo: `${siteUrl}/auth/callback`,
+            },
+          });
+          if (resendErr) {
+            console.warn("[SignUp] Resend warning:", resendErr.message);
+            authWarning = resendErr.message;
+          } else {
+            emailSent = true;
+          }
+        } else {
+          emailSent = true;
+        }
       }
     } catch (authCreateErr) {
       console.warn("[SignUp] Supabase auth creation exception:", authCreateErr);
+      authWarning = authCreateErr instanceof Error ? authCreateErr.message : "Unknown auth error";
     }
 
     return Response.json({
       ok: true,
       requires_verification: true,
       emailSent,
+      warning: authWarning,
       message:
-        "Account created! A confirmation link has been sent to your email. Please check your inbox and click the link to verify your email before signing in.",
+        "Account created! A confirmation link has been sent to your email. Please check your inbox (and Spam folder) to verify your account.",
       user: {
         id: newUser?.id || email,
         username,

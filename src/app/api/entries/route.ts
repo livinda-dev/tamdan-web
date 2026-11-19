@@ -77,6 +77,8 @@ async function handleGet(req: NextRequest, claims: JwtClaims): Promise<Response>
       daily_submission_count: currentDailyCount,
       max_daily_submissions: maxDailySubmissions,
       remaining_daily_submissions: remainingDailySubmissions,
+      has_telegram: !!userRow.chat_id,
+      chat_id: userRow.chat_id ?? null,
     });
   } catch (e: unknown) {
     const message =
@@ -124,6 +126,18 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       return Response.json(
         { ok: false, error: "User not found in database. Please sign out and sign in again." },
         { status: 404 }
+      );
+    }
+
+    // 0. Verify Telegram bot connection
+    if (!userRow.chat_id) {
+      return Response.json(
+        {
+          ok: false,
+          error: "You have not connected your Telegram bot yet. Please connect to our Telegram bot first so we can deliver your daily personalized news digests.",
+          requires_telegram: true,
+        },
+        { status: 403 }
       );
     }
 
@@ -214,12 +228,53 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       console.warn("[Entries API] Could not update daily_submission_count:", countErr);
     }
 
+    // 3. Trigger n8n Webhook with topic_id
+    const authHeader = req.headers.get("authorization") || "";
+    const n8nWebhookUrl =
+      process.env.N8N_WEBHOOK_URL ||
+      "https://n8n.tamdan.online/webhook/922f2179-c4b3-45f2-bc82-839447024457";
+
+    const topicRecordId = data?.[0]?.id || existingTitle?.id || null;
+
+    let webhookStatus: { ok: boolean; status?: number; error?: string; topic_id?: string | number } | null = null;
+    if (topicRecordId && n8nWebhookUrl) {
+      try {
+        const n8nPayload = {
+          topic_id: topicRecordId,
+        };
+
+        const n8nRes = await fetch(n8nWebhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(authHeader ? { Authorization: authHeader } : {}),
+          },
+          body: JSON.stringify(n8nPayload),
+        });
+
+        webhookStatus = {
+          ok: n8nRes.ok,
+          status: n8nRes.status,
+          topic_id: topicRecordId,
+        };
+      } catch (webhookErr) {
+        console.error("[Entries API] n8n webhook error:", webhookErr);
+        webhookStatus = {
+          ok: false,
+          error: webhookErr instanceof Error ? webhookErr.message : String(webhookErr),
+          topic_id: topicRecordId,
+        };
+      }
+    }
+
     const remaining = Math.max(0, maxDailySubmissions - (currentDailyCount + 1));
     return Response.json({
       ok: true,
       topics: data?.[0] ?? null,
       remaining_daily_submissions: remaining,
       daily_submission_count: currentDailyCount + 1,
+      webhook_triggered: !!webhookStatus?.ok,
+      webhook_status: webhookStatus,
     });
   } catch (e: unknown) {
     const message =
