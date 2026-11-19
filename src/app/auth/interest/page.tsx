@@ -52,9 +52,6 @@ export default function AuthInterestPage() {
     if (!idToken) return;
     setConnectingTelegram(true);
 
-    // Ping Render bot in background to wake it up if asleep
-    fetch("https://news-pro-5cab.onrender.com/", { mode: "no-cors" }).catch(() => {});
-
     try {
       const res = await fetch("/api/bots/generate-telegram-token", {
         method: "POST",
