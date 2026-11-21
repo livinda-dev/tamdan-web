@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isValidEmailFormat } from "@/lib/auth";
+import Alert from "@/components/alert";
 
 interface UserRow {
   id: number;
@@ -27,6 +28,10 @@ export default function ProfilePage() {
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [updatingBot, setUpdatingBot] = useState(false);
   const [currentIdToken, setCurrentIdToken] = useState<string | null>(null);
+  const [alertConfig, setAlertConfig] = useState<{
+    text: string;
+    status: "error" | "success" | "info" | "warning";
+  } | null>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -169,7 +174,10 @@ export default function ProfilePage() {
       try {
         const sessionRaw = localStorage.getItem("session");
         if (!sessionRaw) {
-          alert("Session expired. Please log in again.");
+          setAlertConfig({
+            text: "Session expired. Please log in again.",
+            status: "warning",
+          });
           return;
         }
 
@@ -177,7 +185,10 @@ export default function ProfilePage() {
         const idToken = parsed.id_token;
 
         if (!idToken) {
-          alert("Session expired. Please log in again.");
+          setAlertConfig({
+            text: "Session expired. Please log in again.",
+            status: "warning",
+          });
           return;
         }
 
@@ -192,13 +203,20 @@ export default function ProfilePage() {
         const json = await res.json();
 
         if (json.ok && json.token) {
-          window.open(`https://t.me/tamdanNewsBot?start=${json.token}`, "_blank");
+          const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "TamdanNews_bot";
+          window.open(`https://t.me/${botUsername}?start=${json.token}`, "_blank");
         } else {
-          alert("Failed to generate connection link. Please try again.");
+          setAlertConfig({
+            text: json.error || "Failed to generate connection link. Please try again.",
+            status: json.error?.toLowerCase()?.includes("phone number") ? "warning" : "error",
+          });
         }
       } catch (error) {
         console.error("Telegram connect error:", error);
-        alert("Failed to connect. Please try again.");
+        setAlertConfig({
+          text: "Failed to connect to Telegram. Please try again.",
+          status: "error",
+        });
       }
     }
   };
@@ -401,6 +419,13 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+      {/* Styled In-App Alert Box */}
+      <Alert
+        isOpen={!!alertConfig}
+        text={alertConfig?.text || ""}
+        status={alertConfig?.status || "info"}
+        onClose={() => setAlertConfig(null)}
+      />
     </main>
   );
 }

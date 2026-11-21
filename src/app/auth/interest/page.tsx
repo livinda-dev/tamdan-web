@@ -67,11 +67,15 @@ export default function AuthInterestPage() {
         window.open(`https://t.me/tam_dan_news_bot?start=${json.token}`, "_blank");
         setTelegramPromptOpen(false);
       } else {
-        alert(json.error || "Failed to generate Telegram connect link.");
+        setAlertText(json.error || "Failed to generate Telegram connect link.");
+        setAlertStatus("error");
+        setIsAlertOpen(true);
       }
     } catch (err) {
       console.error("Telegram connect error:", err);
-      alert("Failed to connect Telegram. Please try again.");
+      setAlertText("Failed to connect Telegram. Please try again.");
+      setAlertStatus("error");
+      setIsAlertOpen(true);
     } finally {
       setConnectingTelegram(false);
     }
