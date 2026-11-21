@@ -355,8 +355,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialError }) 
           </div>
         ) : (
           <>
-            {/* Google Authentication (available for signin/signup) */}
-            {(mode === "signin" || mode === "signup") && (
+            {/* Google Authentication (temporarily hidden) */}
+            {/* Set NEXT_PUBLIC_SHOW_GOOGLE_LOGIN=true in .env to re-enable */}
+            {process.env.NEXT_PUBLIC_SHOW_GOOGLE_LOGIN === "true" && (mode === "signin" || mode === "signup") && (
               <div className="pt-5 px-6 sm:px-8">
                 <button
                   type="button"
