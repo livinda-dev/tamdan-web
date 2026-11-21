@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
 import GoogleSignInModal from "@/components/googleButton";
+import Alert from "@/components/alert";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
@@ -36,6 +37,12 @@ export default function NavBar() {
   const [userChatId, setUserChatId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userPhoneNumber, setUserPhoneNumber] = useState<string | null>(null);
+  const [alertConfig, setAlertConfig] = useState<{
+    text: string;
+    status: "error" | "success" | "info" | "warning";
+    actionText?: string;
+    onAction?: () => void;
+  } | null>(null);
   // Must use NEXT_PUBLIC_ prefix so the value is available in the browser bundle
   const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
   const handleOpenGoogle = () => {
@@ -157,19 +164,37 @@ export default function NavBar() {
 
   const handleTelegramConnect = async () => {
     if (!userEmail) {
-      alert("Please sign in first.");
+      setAlertConfig({
+        text: "Please sign in first before connecting your Telegram account.",
+        status: "info",
+        actionText: "Sign In",
+        onAction: () => handleOpenGoogle(),
+      });
+      setIsDropdownOpen(false);
       return;
     }
 
     if (!userPhoneNumber) {
-      alert("Please add a phone number in your profile before connecting Telegram.");
+      setAlertConfig({
+        text: "Please add a phone number in your profile before connecting Telegram.",
+        status: "warning",
+        actionText: "Go to Profile",
+        onAction: () => router.push("/profile"),
+      });
+      setIsDropdownOpen(false);
       return;
     }
 
     try {
       const sessionRaw = localStorage.getItem("session");
       if (!sessionRaw) {
-        alert("Session expired. Please log in again.");
+        setAlertConfig({
+          text: "Your session has expired. Please log in again.",
+          status: "warning",
+          actionText: "Sign In",
+          onAction: () => handleOpenGoogle(),
+        });
+        setIsDropdownOpen(false);
         return;
       }
 
@@ -177,7 +202,13 @@ export default function NavBar() {
       const idToken = parsed.id_token;
 
       if (!idToken) {
-        alert("Session expired. Please log in again.");
+        setAlertConfig({
+          text: "Your session has expired. Please log in again.",
+          status: "warning",
+          actionText: "Sign In",
+          onAction: () => handleOpenGoogle(),
+        });
+        setIsDropdownOpen(false);
         return;
       }
 
@@ -195,15 +226,24 @@ export default function NavBar() {
       const json = await res.json();
 
       if (json.ok && json.token) {
-        // NEXT_PUBLIC_TELEGRAM_BOT_USERNAME must be set in .env.local
-        window.open(`https://t.me/tam_dan_news_bot?start=${json.token}`, "_blank");
+        const botUsername = telegramBotUsername || "TamdanNews_bot";
+        window.open(`https://t.me/${botUsername}?start=${json.token}`, "_blank");
         setIsDropdownOpen(false);
       } else {
-        alert("Failed to generate connection link. Please try again.");
+        const isPhoneErr = json.error?.toLowerCase()?.includes("phone number");
+        setAlertConfig({
+          text: json.error || "Failed to generate connection link. Please try again.",
+          status: isPhoneErr ? "warning" : "error",
+          actionText: isPhoneErr ? "Go to Profile" : undefined,
+          onAction: isPhoneErr ? () => router.push("/profile") : undefined,
+        });
       }
     } catch (error) {
       console.error("Telegram connect error:", error);
-      alert("Failed to connect. Please try again.");
+      setAlertConfig({
+        text: "Failed to connect to Telegram. Please try again.",
+        status: "error",
+      });
     }
   };
 
@@ -454,6 +494,16 @@ export default function NavBar() {
           setAuthError(null);
         }}
         initialError={authError}
+      />
+
+      {/* Styled In-App Alert Box */}
+      <Alert
+        isOpen={!!alertConfig}
+        text={alertConfig?.text || ""}
+        status={alertConfig?.status || "info"}
+        actionText={alertConfig?.actionText}
+        onAction={alertConfig?.onAction}
+        onClose={() => setAlertConfig(null)}
       />
     </nav>
   );

@@ -1,17 +1,21 @@
 "use client";
 import React from "react";
-import { CheckCircle, AlertTriangle, Info } from "lucide-react";
+import { CheckCircle, AlertTriangle, Info, AlertCircle } from "lucide-react";
 
 export default function Alert({
   text,
   status,
   isOpen,
   onClose,
+  actionText,
+  onAction,
 }: {
   text: string;
-  status: "error" | "success" | "info";
+  status: "error" | "success" | "info" | "warning";
   isOpen: boolean;
   onClose: () => void;
+  actionText?: string;
+  onAction?: () => void;
 }) {
   if (!isOpen) return null;
 
@@ -21,10 +25,16 @@ export default function Alert({
 
   const colors = {
     error: {
-      icon: <AlertTriangle size={48} className="text-red-500" />,
+      icon: <AlertCircle size={48} className="text-red-500" />,
       title: "Error",
       border: "border-red-500",
       glow: { boxShadow: "0 0 25px rgba(220,38,38,0.3)" },
+    },
+    warning: {
+      icon: <AlertTriangle size={48} className="text-amber-500" />,
+      title: "Notice",
+      border: "border-amber-500",
+      glow: { boxShadow: "0 0 25px rgba(245,158,11,0.3)" },
     },
     success: {
       icon: <CheckCircle size={48} className="text-green-600" />,
@@ -38,7 +48,12 @@ export default function Alert({
       border: "border-[#00355A]",
       glow: { boxShadow: "0 0 25px rgba(0,53,90,0.25)" },
     },
-  }[status];
+  }[status] || {
+    icon: <Info size={48} className="text-[#00355A]" />,
+    title: "Information",
+    border: "border-[#00355A]",
+    glow: { boxShadow: "0 0 25px rgba(0,53,90,0.25)" },
+  };
 
   return (
     <div
@@ -46,7 +61,7 @@ export default function Alert({
       onClick={handleBackdropClick}
     >
       <div
-        className={`w-full max-w-sm bg-white rounded-2xl p-6 sm:p-8 text-center border-2 ${colors.border} animate-fadeIn`}
+        className={`w-full max-w-sm bg-white rounded-2xl p-6 sm:p-8 text-center border-2 ${colors.border} animate-fadeIn shadow-2xl`}
         style={colors.glow}
         onClick={(e) => e.stopPropagation()}
       >
@@ -62,12 +77,32 @@ export default function Alert({
           {text}
         </p>
 
-        <button
-          onClick={onClose}
-          className="mt-6 w-full py-2 rounded-lg font-medium bg-[#00355A] text-white hover:bg-[#00243C] transition text-sm sm:text-base"
-        >
-          OK
-        </button>
+        {actionText && onAction ? (
+          <div className="mt-6 space-y-2">
+            <button
+              onClick={() => {
+                onAction();
+                onClose();
+              }}
+              className="w-full py-2.5 rounded-lg font-medium bg-[#00355A] text-white hover:bg-[#00243C] transition text-sm sm:text-base cursor-pointer shadow-sm"
+            >
+              {actionText}
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full py-2 rounded-lg font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition text-sm cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={onClose}
+            className="mt-6 w-full py-2.5 rounded-lg font-medium bg-[#00355A] text-white hover:bg-[#00243C] transition text-sm sm:text-base cursor-pointer shadow-sm"
+          >
+            OK
+          </button>
+        )}
       </div>
     </div>
   );
