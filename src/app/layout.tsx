@@ -4,7 +4,6 @@ import "./globals.css";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import AuthHashListener from "@/components/AuthHashListener";
-import Logo from "../../public/logo.svg";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,8 +64,14 @@ export const metadata: Metadata = {
     images: ["/image/LogoTamdan.png"],
   },
   icons: {
-    icon: Logo.src,
-    apple: Logo.src,
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   robots: {
     index: true,
