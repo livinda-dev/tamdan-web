@@ -51,8 +51,9 @@ async function handleGet(_req: NextRequest, claims: JwtClaims): Promise<Response
 
     const { data: userQuestion, error: questionError } = await supabase
       .from("user_question")
-      .select("question")
-      .eq("user_id", userRow.id);
+      .select("id, question, answer, answered_at, answered_by, status, created_at")
+      .eq("user_id", userRow.id)
+      .order("created_at", { ascending: false });
 
     if (questionError) {
       console.error("[Questions API] get user_question error:", questionError.message);
@@ -106,7 +107,11 @@ async function handlePost(req: NextRequest, claims: JwtClaims): Promise<Response
       );
     }
 
-    const insertPayload = { question: content, user_id: userRow.id } as const;
+    const insertPayload = {
+      question: content,
+      user_id: userRow.id,
+      status: "pending",
+    } as const;
 
     const { data, error } = await supabase
       .from("user_question")
