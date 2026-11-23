@@ -5,6 +5,23 @@ import { sendTelegramMessage } from "@/lib/telegram";
 
 export const runtime = "nodejs";
 
+function getCorsHeaders(req: NextRequest) {
+  const origin = req.headers.get("origin") || "*";
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-client-info, apikey",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
+export async function OPTIONS(req: NextRequest) {
+  return new Response(null, {
+    status: 204,
+    headers: getCorsHeaders(req),
+  });
+}
+
 function getSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   const serviceKey =
@@ -32,17 +49,25 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const cors = getCorsHeaders(req);
+
   try {
     const { id } = await params;
     const questionId = Number(id);
 
     if (!questionId || isNaN(questionId)) {
-      return Response.json({ ok: false, error: "Invalid question ID" }, { status: 400 });
+      return Response.json(
+        { ok: false, error: "Invalid question ID" },
+        { status: 400, headers: cors }
+      );
     }
 
     const body = await req.json().catch(() => null);
     if (!body || !body.answer || typeof body.answer !== "string") {
-      return Response.json({ ok: false, error: "Answer content is required" }, { status: 400 });
+      return Response.json(
+        { ok: false, error: "Answer content is required" },
+        { status: 400, headers: cors }
+      );
     }
 
     const {
@@ -64,7 +89,7 @@ export async function POST(
     if (qErr || !questionRecord) {
       return Response.json(
         { ok: false, error: qErr?.message || "Question not found" },
-        { status: 404 }
+        { status: 404, headers: cors }
       );
     }
 
@@ -86,7 +111,7 @@ export async function POST(
     if (updateErr) {
       return Response.json(
         { ok: false, error: `Failed to update question: ${updateErr.message}` },
-        { status: 500 }
+        { status: 500, headers: cors }
       );
     }
 
@@ -189,21 +214,24 @@ export async function POST(
       }
     }
 
-    return Response.json({
-      ok: true,
-      message: "Question answered successfully",
-      question: updatedQuestion,
-      delivery: {
-        web: true,
-        telegram_sent: telegramSent,
-        telegram_error: telegramError,
-        email_sent: emailSent,
-        email_error: emailError,
+    return Response.json(
+      {
+        ok: true,
+        message: "Question answered successfully",
+        question: updatedQuestion,
+        delivery: {
+          web: true,
+          telegram_sent: telegramSent,
+          telegram_error: telegramError,
+          email_sent: emailSent,
+          email_error: emailError,
+        },
       },
-    });
+      { headers: cors }
+    );
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error("[Reply API] Internal Error:", errorMsg);
-    return Response.json({ ok: false, error: errorMsg }, { status: 500 });
+    return Response.json({ ok: false, error: errorMsg }, { status: 500, headers: cors });
   }
 }
