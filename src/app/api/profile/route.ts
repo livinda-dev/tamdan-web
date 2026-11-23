@@ -63,14 +63,43 @@ async function handlePatch(req: NextRequest, claims: JwtClaims): Promise<Respons
         ? body.secondary_email.trim()
         : undefined;
     const chatId = body?.chat_id;
+    const phoneNumber =
+      typeof body?.phone_number === "string" ? body.phone_number.trim() : undefined;
 
-    if (username === undefined && secondaryEmail === undefined && chatId === undefined) {
+    if (
+      username === undefined &&
+      secondaryEmail === undefined &&
+      chatId === undefined &&
+      phoneNumber === undefined
+    ) {
       return Response.json({ ok: false, error: "Missing fields to update" }, { status: 400 });
     }
 
     const supabase = getSupabase();
     if (!supabase) {
       return Response.json({ ok: false, error: "Supabase env missing" }, { status: 500 });
+    }
+
+    // If updating phone_number, ensure it's not already registered to another user
+    if (phoneNumber !== undefined && phoneNumber !== "") {
+      const { data: existingPhone, error: pe } = await supabase
+        .from("users")
+        .select("email, phone_number")
+        .eq("phone_number", phoneNumber)
+        .limit(1);
+
+      if (pe) {
+        return Response.json({ ok: false, error: pe.message }, { status: 502 });
+      }
+
+      if (existingPhone && existingPhone.length > 0) {
+        if (existingPhone[0].email !== claims.email) {
+          return Response.json(
+            { ok: false, error: "This phone number is already linked to another account." },
+            { status: 409 }
+          );
+        }
+      }
     }
 
     // If updating secondary_email, ensure it's not already used by another user
@@ -112,6 +141,7 @@ async function handlePatch(req: NextRequest, claims: JwtClaims): Promise<Respons
     if (username !== undefined) updates.username = username;
     if (secondaryEmail !== undefined) updates.secondary_email = secondaryEmail;
     if (chatId !== undefined) updates.chat_id = chatId;
+    if (phoneNumber !== undefined) updates.phone_number = phoneNumber || null;
 
     const { data, error } = await supabase
       .from("users")
