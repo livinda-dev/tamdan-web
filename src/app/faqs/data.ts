@@ -1,30 +1,30 @@
 export const faqData = [
   {
-    question: "What is Tamdan?",
-    answer: "Tamdan is a Personalized AI Search Agent System that provides a daily, personalized newsletter. Its purpose is to solve the problem of information overload by delivering exactly the content the user cares about."
+    question: "What is TAMDAN?",
+    answer: "TAMDAN is a personalized news curation service designed to keep you informed without the noise of social media. It gathers the latest stories according to your chosen interests, creates clear summaries, and delivers them directly to you every morning."
   },
   {
-    question: "How does Tamdan work?",
-    answer: "Tamdan operates via a two-workflow automation system (n8n Agent) that executes daily at 6 AM. The AI pipeline follows four main steps: Interest Input (converting topics to queries), Searching (finding relevant content), Intelligent Filtering (selecting the most relevant results), and Content Synthesis (summarizing and providing source links)."
+    question: "How does TAMDAN work?",
+    answer: "You select up to 5 custom topics or areas of interest on your profile. Every morning, our system searches trusted global and local news publishers, selects the most important and recent articles, summarizes the key points, and delivers them directly to your Telegram or email with links to original sources."
   },
   {
-    question: "How will I receive my personalized news, and when?",
-    answer: "Your personalized newsletter is generated and delivered every morning at 6 AM. The system utilizes a multi-channel delivery approach, sending the curated news via Email (using the Gmail API) and through the Telegram Bot."
+    question: "How and when will I receive my personalized news digest?",
+    answer: "Your daily news edition is prepared and delivered every morning at 7:00 AM. You can receive it directly via Telegram through our official bot (@TamdanNews_bot), check it in your email, or browse it anytime on our website under the Edition tab."
   },
   {
-    question: "How does Tamdan convert my vague interests into structured search queries?",
-    answer: "In the Interest Input stage (Step 1), an AI agent (GPT-4o-mini via OpenRouter) is used to convert your natural language interests into up to high-quality search queries. This agent corrects spelling, infers meaning, and ensures the resulting queries target recent newsfrom diverse angles."
+    question: "How do I choose or update my topics of interest?",
+    answer: "Simply log in to your account, visit the Interests page, and enter the topics you care about (such as AI & Tech, Global Economy, Climate, or Cybersecurity). You can edit or change your selected topics anytime, and your next morning digest will automatically reflect your new choices."
   },
   {
-    question: "How does the system ensure the news content is fresh and high-quality?",
-    answer: "The system ensures freshness by configuring the Brave Search API to search only for content published within the past day that are less than 24hrs old. For quality, the Intelligent Filtering stage utilizes AI agents to remove low-quality pages and filter outunwanted and irrelevant sources."
+    question: "How does TAMDAN ensure news freshness and accuracy?",
+    answer: "We only source news published within the past 24 hours from reputable, verified journalistic outlets. Our curation filters out clickbait, duplicate stories, and unverified rumors so that you receive only accurate, essential information."
   },
   {
-    question: "What core technologies and APIs power the Tamdan system?",
-    answer: "Tamdan relies on n8n for workflow automation and uses Supabase as the PostgreSQL database for storing user and newsletter data. Key integrations include the Brave Search API for news discovery, Firecrawl for clean content extraction, and the OpenRouter API for orchestrating various LLM agents (GPT-4o variants)."
+    question: "Is TAMDAN free to use?",
+    answer: "Yes, TAMDAN is completely free. You can create an account, customize your topics, and connect with our Telegram bot without any subscription fees or hidden costs."
   },
   {
-    question: "Are there plans for new features in the future?",
-    answer: "The future roadmap for the Tamdan Personalized AI Search Agent System is structured across several phases to support enhanced personalization and robust scaling. Initial enhancements in Phase 1 focus on user experience, including implementing a user feedback loop (like thumbs up/down on articles) to improve content relevance. To achieve deep personalization in Phase 2, the system will introduce multi-language support (to translate summaries) and enable users to set custom delivery schedules per user, overriding the current fixed 6 AM daily delivery time. Long-term Phase 3 goals include the development of an ML-based topic recommendation engine, and feature expansion will aim to surpass the current limit on input topics by generating more than five high-quality search queries per topic,. Regarding system capacity, the architecture includes scaling recommendations necessary to handle up to 1,000 users. Though constrained by current budget limitations is the primary Brave API quota is limited for free trail. We would also like to explore with more intelligent and higher ends model within our project also."
-  },
+    question: "What if I have a question or need help?",
+    answer: "If you have any questions or feedback, you can type your message in the inquiry box at the bottom of this page. Our team reviews incoming questions and will reply to you directly via Telegram, email, or in your question history on this website."
+  }
 ];
