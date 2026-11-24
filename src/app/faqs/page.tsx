@@ -11,12 +11,10 @@ export default function FaqsPage() {
             Quick Start -- Frequently Asked Question of
             <span className="primary-color font-bold"> TAMDAN</span>
           </p>
-          <p className="text-sm sm:text-base md:text-lg leading-relaxed">
-            You have entered the FAQ Path — where TAMDAN answers all your
-            questions. Learn how our AI finds trusted news, sends updates to
-            your Telegram or Gmail, and keeps your information accurate and
-            personal. Still wondering about something? Just ask TAMDAN — your AI
-            guide is listening.
+          <p className="text-sm sm:text-base md:text-lg leading-relaxed text-gray-700">
+            Welcome to the TAMDAN FAQ center. Learn how we deliver personalized news digests, 
+            send morning updates to your Telegram or email, and keep you informed every day. 
+            Still wondering about something? Send us your inquiry below and our team will get back to you.
           </p>
         </div>
         <div>
