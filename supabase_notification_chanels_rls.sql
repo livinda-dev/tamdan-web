@@ -25,12 +25,6 @@ WITH CHECK (
     WHERE admin.email = auth.jwt() ->> 'email'
     AND admin.is_active IS NOT FALSE
   )
-  OR
-  EXISTS (
-    SELECT 1 FROM public.users
-    WHERE users.email = auth.jwt() ->> 'email'
-    AND users.is_admin = true
-  )
 );
 
 -- 4. Policy: Only authenticated ADMINS can UPDATE notifications
@@ -45,24 +39,12 @@ USING (
     WHERE admin.email = auth.jwt() ->> 'email'
     AND admin.is_active IS NOT FALSE
   )
-  OR
-  EXISTS (
-    SELECT 1 FROM public.users
-    WHERE users.email = auth.jwt() ->> 'email'
-    AND users.is_admin = true
-  )
 )
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.admin
     WHERE admin.email = auth.jwt() ->> 'email'
     AND admin.is_active IS NOT FALSE
-  )
-  OR
-  EXISTS (
-    SELECT 1 FROM public.users
-    WHERE users.email = auth.jwt() ->> 'email'
-    AND users.is_admin = true
   )
 );
 
@@ -77,11 +59,5 @@ USING (
     SELECT 1 FROM public.admin
     WHERE admin.email = auth.jwt() ->> 'email'
     AND admin.is_active IS NOT FALSE
-  )
-  OR
-  EXISTS (
-    SELECT 1 FROM public.users
-    WHERE users.email = auth.jwt() ->> 'email'
-    AND users.is_admin = true
   )
 );
