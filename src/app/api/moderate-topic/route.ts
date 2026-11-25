@@ -56,6 +56,11 @@ Mark UNSAFE if input is mostly wrong or that word is wrong a lot
 • only repeated letters  
 • meaningless fragments ("ok", "hi", "lol", "hmm")
 
+--- MULTILINGUAL & KHMER SCRIPT SUPPORT ---
+• Legitimate topics in Khmer (ភាសាខ្មែរ), English, or mixed languages are fully supported.
+• Common topics written in Khmer script (for example: "បច្ចេកវិទ្យា AI", "សេដ្ឋកិច្ច", "ទីផ្សារមាស", "សន្តិសុខសាយប័រ", "ពាណិជ្ជកម្ម", "ព័ត៌មានអន្តរជាតិ") have clear semantic meaning and must be marked SAFE unless they violate the safety guidelines above.
+• Do NOT flag valid Khmer text as nonsense, gibberish, or incorrect text.
+
 You MUST respond only in JSON:
 {
   "status": "SAFE" | "UNSAFE",
