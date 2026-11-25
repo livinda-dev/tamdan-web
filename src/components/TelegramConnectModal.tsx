@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import QRCode from "qrcode";
 import { Check, Copy, ExternalLink, QrCode, Smartphone, X } from "lucide-react";
 
 interface TelegramConnectModalProps {
@@ -34,15 +33,19 @@ export default function TelegramConnectModal({
     if (!isOpen || !telegramLink) return;
 
     let isMounted = true;
-    QRCode.toDataURL(telegramLink, {
-      width: 240,
-      margin: 1.5,
-      color: {
-        dark: "#00355A", // Brand primary navy
-        light: "#FFFFFF",
-      },
-      errorCorrectionLevel: "M",
-    })
+    import("qrcode")
+      .then((mod) => {
+        const qr = mod.default || mod;
+        return qr.toDataURL(telegramLink, {
+          width: 240,
+          margin: 1.5,
+          color: {
+            dark: "#00355A", // Brand primary navy
+            light: "#FFFFFF",
+          },
+          errorCorrectionLevel: "M",
+        });
+      })
       .then((url) => {
         if (isMounted) setQrDataUrl(url);
       })
