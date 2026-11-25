@@ -199,12 +199,17 @@ export default function TelegramConnectModal({
                   </div>
                 </div>
 
-                <div className="space-y-2 max-w-xs mx-auto">
-                  <p className="text-xs font-semibold text-slate-800">
-                    Scan with your phone camera or Google Lens
-                  </p>
-                  <div className="bg-sky-50 border border-sky-100 rounded-lg p-2 text-[11px] text-sky-800 leading-tight">
-                    💡 <strong>Tip:</strong> Open your normal <strong>Phone Camera</strong> to scan. (Telegram’s in-app <em>"Link Desktop Device"</em> scanner is only for PC logins).
+                <div className="space-y-2 max-w-xs mx-auto text-left">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-700 leading-relaxed space-y-1.5 shadow-sm">
+                    <p className="font-bold text-[#00355A] flex items-center gap-1.5 text-xs">
+                      <span>📸</span> How to scan:
+                    </p>
+                    <p className="text-slate-600">
+                      • Open your <strong>Phone Camera</strong> (iOS Camera, Android Camera, or Google Lens) and point at this code.
+                    </p>
+                    <p className="text-slate-500 text-[10.5px] border-t border-slate-200/60 pt-1.5">
+                      ⚠️ <em>Do not scan inside Telegram's <strong>"New Contact"</strong> screen — bots are automated assistants and cannot be added as personal phone contacts.</em>
+                    </p>
                   </div>
                 </div>
               </div>
