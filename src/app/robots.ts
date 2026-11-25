@@ -5,9 +5,16 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        allow: [
+          "/",
+          "/api/site-settings",
+        ],
         disallow: [
-          "/api/",
+          "/api/admin/",
+          "/api/cron/",
+          "/api/bots/",
+          "/api/auth/",
+          "/api/profile/",
           "/profile/",
           "/auth/callback",
           "/auth/reset-password",
@@ -18,3 +25,4 @@ export default function robots(): MetadataRoute.Robots {
     host: "https://tamdan.online",
   };
 }
+
