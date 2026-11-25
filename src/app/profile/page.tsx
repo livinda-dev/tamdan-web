@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isValidEmailFormat } from "@/lib/auth";
 import Alert from "@/components/alert";
+import TelegramConnectModal from "@/components/TelegramConnectModal";
 
 interface UserRow {
   id: number;
@@ -28,6 +29,10 @@ export default function ProfilePage() {
   const [newEmailInput, setNewEmailInput] = useState("");
   const [emailModalError, setEmailModalError] = useState<string | null>(null);
   const [updatingEmail, setUpdatingEmail] = useState(false);
+
+  // Telegram connection modal state
+  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
+  const [telegramModalToken, setTelegramModalToken] = useState<string | null>(null);
 
   // Phone modal state
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -252,8 +257,8 @@ export default function ProfilePage() {
       const json = await res.json();
 
       if (json.ok && json.token) {
-        const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "TamdanNews_bot";
-        window.open(`https://t.me/${botUsername}?start=${json.token}`, "_blank");
+        setTelegramModalToken(json.token);
+        setIsTelegramModalOpen(true);
       } else {
         setAlertConfig({
           text: json.error || "Failed to generate connection link. Please try again.",
@@ -268,6 +273,24 @@ export default function ProfilePage() {
       });
     } finally {
       setUpdatingBot(false);
+    }
+  };
+
+  const reloadProfile = async () => {
+    const raw = localStorage.getItem("session");
+    if (!raw) return;
+    try {
+      const session = JSON.parse(raw);
+      if (!session.id_token) return;
+      const res = await fetch("/api/profile", {
+        headers: { Authorization: `Bearer ${session.id_token}` },
+      });
+      const json = await res.json();
+      if (json.ok && json.user) {
+        setUser(json.user);
+      }
+    } catch (e) {
+      console.error("Failed to reload profile", e);
     }
   };
 
@@ -656,6 +679,14 @@ export default function ProfilePage() {
         text={alertConfig?.text || ""}
         status={alertConfig?.status || "info"}
         onClose={() => setAlertConfig(null)}
+      />
+
+      {/* Telegram Connection Modal (QR Code & Direct Link) */}
+      <TelegramConnectModal
+        isOpen={isTelegramModalOpen}
+        onClose={() => setIsTelegramModalOpen(false)}
+        token={telegramModalToken}
+        onSuccess={reloadProfile}
       />
     </main>
   );

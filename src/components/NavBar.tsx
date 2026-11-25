@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
 import GoogleSignInModal from "@/components/googleButton";
 import Alert from "@/components/alert";
+import TelegramConnectModal from "@/components/TelegramConnectModal";
 
 function decodeJwtPayload<T = unknown>(jwt?: string): T | null {
   if (!jwt) return null;
@@ -37,6 +38,8 @@ export default function NavBar() {
   const [userChatId, setUserChatId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userPhoneNumber, setUserPhoneNumber] = useState<string | null>(null);
+  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
+  const [telegramModalToken, setTelegramModalToken] = useState<string | null>(null);
   const [alertConfig, setAlertConfig] = useState<{
     text: string;
     status: "error" | "success" | "info" | "warning";
@@ -226,8 +229,8 @@ export default function NavBar() {
       const json = await res.json();
 
       if (json.ok && json.token) {
-        const botUsername = telegramBotUsername || "TamdanNews_bot";
-        window.open(`https://t.me/${botUsername}?start=${json.token}`, "_blank");
+        setTelegramModalToken(json.token);
+        setIsTelegramModalOpen(true);
         setIsDropdownOpen(false);
       } else {
         const isPhoneErr = json.error?.toLowerCase()?.includes("phone number");
@@ -494,6 +497,32 @@ export default function NavBar() {
           setAuthError(null);
         }}
         initialError={authError}
+      />
+
+      {/* Telegram Connection Modal (QR Code & Direct Link) */}
+      <TelegramConnectModal
+        isOpen={isTelegramModalOpen}
+        onClose={() => setIsTelegramModalOpen(false)}
+        token={telegramModalToken}
+        onSuccess={() => {
+          // Re-fetch profile to update chat_id in navbar
+          const raw = localStorage.getItem("session");
+          if (raw) {
+            const session = JSON.parse(raw);
+            if (session.id_token) {
+              fetch("/api/profile", {
+                headers: { Authorization: `Bearer ${session.id_token}` },
+              })
+                .then((r) => r.json())
+                .then((d) => {
+                  if (d.ok && d.user?.chat_id) {
+                    setUserChatId(d.user.chat_id);
+                  }
+                })
+                .catch(() => {});
+            }
+          }
+        }}
       />
 
       {/* Styled In-App Alert Box */}
