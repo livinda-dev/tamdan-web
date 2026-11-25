@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/alert";
+import TelegramConnectModal from "@/components/TelegramConnectModal";
 import { useRef } from "react";
 
 import GenerateAgentButton from "@/components/GenerateAgentButton";
@@ -47,6 +48,8 @@ export default function AuthInterestPage() {
   const [hasTelegram, setHasTelegram] = useState<boolean | null>(null);
   const [telegramPromptOpen, setTelegramPromptOpen] = useState(false);
   const [connectingTelegram, setConnectingTelegram] = useState(false);
+  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
+  const [telegramModalToken, setTelegramModalToken] = useState<string | null>(null);
 
   const handleConnectTelegram = async () => {
     if (!idToken) return;
@@ -64,8 +67,9 @@ export default function AuthInterestPage() {
 
       const json = await res.json();
       if (json.ok && json.token) {
-        window.open(`https://t.me/tam_dan_news_bot?start=${json.token}`, "_blank");
+        setTelegramModalToken(json.token);
         setTelegramPromptOpen(false);
+        setIsTelegramModalOpen(true);
       } else {
         setAlertText(json.error || "Failed to generate Telegram connect link.");
         setAlertStatus("error");
@@ -416,6 +420,16 @@ export default function AuthInterestPage() {
         status={alertStatus}
         isOpen={isALertOpen}
         onClose={() => setIsAlertOpen(false)}
+      />
+
+      {/* Telegram Connection Modal with QR Code and Direct Options */}
+      <TelegramConnectModal
+        isOpen={isTelegramModalOpen}
+        onClose={() => setIsTelegramModalOpen(false)}
+        token={telegramModalToken}
+        onSuccess={() => {
+          setHasTelegram(true);
+        }}
       />
 
       {/* Telegram Not Connected Modal Prompt */}
