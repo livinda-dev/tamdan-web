@@ -56,49 +56,38 @@ export async function POST(req: NextRequest) {
     if (cmdLower.startsWith("/start")) {
       const parts = rawText.split(/\s+/, 2);
 
-      // Check if user is already linked
-      try {
-        const { data: existingUser } = await supabase
-          .from("users")
-          .select("phone_number")
-          .eq("chat_id", String(chatId))
-          .maybeSingle();
-
-        if (existingUser?.phone_number) {
-          await sendTelegramMessage(
-            chatId,
-            `✅ You're already connected to TAMDAN!\n\n` +
-            `Linked phone number: <b>${existingUser.phone_number}</b>\n\n` +
-            `You'll receive news updates here automatically.\n\n` +
-            `Daily news will be sent to you at 7:00 AM every day based on your selected topics.\n\n` +
-            `Thank you for using TAMDAN.`,
-            { parse_mode: "HTML" }
-          );
-          return Response.json({ status: "already_linked" });
-        }
-      } catch (err) {
-        console.error("[Telegram Webhook] Error checking existing user:", err);
-      }
-
       if (parts.length === 2) {
         const tokenOrPhone = parts[1].trim();
 
-        // Token-based linking (generated from website)
+        // Case A: Token-based linking (generated from website)
         if (tokenOrPhone.length === 64) {
           try {
+            // Look up the token
             const { data: tokenData, error: tokenErr } = await supabase
               .from("telegram_tokens")
               .select("*")
               .eq("token", tokenOrPhone)
-              .eq("used", false)
               .maybeSingle();
 
             if (tokenErr || !tokenData) {
               await sendTelegramMessage(
                 chatId,
-                "❌ Invalid or expired link. Please try connecting again from the website."
+                "❌ <b>Invalid Connection Link</b>\n\n" +
+                "This link was not found. Please click <b>Connect Telegram</b> on the website to generate a fresh link.",
+                { parse_mode: "HTML" }
               );
               return Response.json({ status: "invalid_token" });
+            }
+
+            // Check if already used
+            if (tokenData.used) {
+              await sendTelegramMessage(
+                chatId,
+                "⚠️ <b>Link Already Used</b>\n\n" +
+                "This link has already been used. Please click <b>Connect Telegram</b> on the website to generate a fresh link.",
+                { parse_mode: "HTML" }
+              );
+              return Response.json({ status: "token_already_used" });
             }
 
             // Check expiration
@@ -106,18 +95,62 @@ export async function POST(req: NextRequest) {
             if (new Date() > expiresAt) {
               await sendTelegramMessage(
                 chatId,
-                "❌ Link expired. Please generate a new link from the website."
+                "⌛ <b>Link Expired</b>\n\n" +
+                "This connection link has expired (links are valid for 15 minutes). Please generate a fresh link from the website.",
+                { parse_mode: "HTML" }
               );
               return Response.json({ status: "token_expired" });
             }
 
             const phoneNumber = tokenData.phone_number;
 
-            // Mark token as used
-            await supabase
-              .from("telegram_tokens")
-              .update({ used: true })
-              .eq("token", tokenOrPhone);
+            // Verify that this phone number exists in the users table
+            const { data: targetUser } = await supabase
+              .from("users")
+              .select("id, phone_number, chat_id")
+              .eq("phone_number", phoneNumber)
+              .maybeSingle();
+
+            if (!targetUser) {
+              await sendTelegramMessage(
+                chatId,
+                `❌ <b>Wrong Phone Number</b>\n\n` +
+                `The phone number associated with this link (<b>${phoneNumber}</b>) is not registered in our database.\n\n` +
+                `Please check your Profile at <a href="${SITE_URL}/profile">${SITE_URL}/profile</a> to ensure your phone number is saved correctly.`,
+                { parse_mode: "HTML" }
+              );
+              return Response.json({ status: "phone_not_found" });
+            }
+
+            // Check if this Telegram account is already linked to a DIFFERENT phone number
+            const { data: existingUser } = await supabase
+              .from("users")
+              .select("id, phone_number, chat_id")
+              .eq("chat_id", String(chatId))
+              .maybeSingle();
+
+            if (existingUser && existingUser.phone_number !== phoneNumber) {
+              await sendTelegramMessage(
+                chatId,
+                `❌ <b>Wrong Phone Number / Account Mismatch</b>\n\n` +
+                `Your Telegram account is currently connected to <b>${existingUser.phone_number}</b>, but you are trying to link it to <b>${phoneNumber}</b>.\n\n` +
+                `• If you want to connect to <b>${phoneNumber}</b>, send <code>/unlink</code> first to disconnect this Telegram account, then click the link again.\n` +
+                `• Or make sure you are using the Telegram account registered with that phone number.`,
+                { parse_mode: "HTML" }
+              );
+              return Response.json({ status: "phone_mismatch" });
+            }
+
+            if (existingUser && existingUser.phone_number === phoneNumber) {
+              await sendTelegramMessage(
+                chatId,
+                `✅ <b>Already Connected!</b>\n\n` +
+                `Your Telegram account is already linked to <b>${phoneNumber}</b>.\n\n` +
+                `Daily news will be sent to you at 7:00 AM every day based on your selected topics.`,
+                { parse_mode: "HTML" }
+              );
+              return Response.json({ status: "already_linked" });
+            }
 
             // Link chat_id to user in users table
             const { error: updateErr } = await supabase
@@ -127,7 +160,15 @@ export async function POST(req: NextRequest) {
 
             if (updateErr) {
               console.error("[Telegram Webhook] Failed to update chat_id:", updateErr.message);
+              await sendTelegramMessage(chatId, "⚠️ Server error updating connection. Please try again.");
+              return Response.json({ status: "db_error" });
             }
+
+            // Mark token as used
+            await supabase
+              .from("telegram_tokens")
+              .update({ used: true })
+              .eq("token", tokenOrPhone);
 
             await sendTelegramMessage(
               chatId,
@@ -145,7 +186,7 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Fallback: Manual phone linking (/start 012345678)
+        // Case B: Fallback manual phone linking (/start 012345678)
         const phoneNumber = tokenOrPhone;
         try {
           const { data: userCheck } = await supabase
@@ -157,11 +198,30 @@ export async function POST(req: NextRequest) {
           if (!userCheck) {
             await sendTelegramMessage(
               chatId,
-              `❌ The phone number <b>${phoneNumber}</b> is not registered.\n\n` +
+              `❌ <b>Wrong Phone Number</b>\n\n` +
+              `The phone number <b>${phoneNumber}</b> is not registered in our database.\n\n` +
               `Please sign in first at:\n${SITE_URL}`,
               { parse_mode: "HTML" }
             );
             return Response.json({ status: "phone_not_found" });
+          }
+
+          // Check if this Telegram account is already linked to another number
+          const { data: existingUser } = await supabase
+            .from("users")
+            .select("id, phone_number, chat_id")
+            .eq("chat_id", String(chatId))
+            .maybeSingle();
+
+          if (existingUser && existingUser.phone_number !== phoneNumber) {
+            await sendTelegramMessage(
+              chatId,
+              `❌ <b>Wrong Phone Number / Account Mismatch</b>\n\n` +
+              `Your Telegram account is currently connected to <b>${existingUser.phone_number}</b>, but you are trying to link it to <b>${phoneNumber}</b>.\n\n` +
+              `To link to <b>${phoneNumber}</b>, send <code>/unlink</code> first, then try again.`,
+              { parse_mode: "HTML" }
+            );
+            return Response.json({ status: "phone_mismatch" });
           }
 
           await supabase
@@ -176,6 +236,29 @@ export async function POST(req: NextRequest) {
           await sendTelegramMessage(chatId, "⚠️ Server error. Please try again.");
           return Response.json({ status: "db_error" });
         }
+      }
+
+      // Check if user is already linked when /start is called without parameter
+      try {
+        const { data: existingUser } = await supabase
+          .from("users")
+          .select("phone_number")
+          .eq("chat_id", String(chatId))
+          .maybeSingle();
+
+        if (existingUser?.phone_number) {
+          await sendTelegramMessage(
+            chatId,
+            `✅ You're already connected to TAMDAN!\n\n` +
+            `Linked phone number: <b>${existingUser.phone_number}</b>\n\n` +
+            `You'll receive news updates here automatically at 7:00 AM every day based on your selected topics.\n\n` +
+            `Type <b>/topics</b> to view your topics, or <b>/unlink</b> to disconnect this account.`,
+            { parse_mode: "HTML" }
+          );
+          return Response.json({ status: "already_linked" });
+        }
+      } catch (err) {
+        console.error("[Telegram Webhook] Error checking existing user:", err);
       }
 
       // /start with no parameter
@@ -199,8 +282,9 @@ export async function POST(req: NextRequest) {
         chatId,
         `🤖 <b>TAMDAN News Bot Commands</b>\n\n` +
         `• <b>/topics</b> — View your active news topics\n` +
-        `• <b>/help</b> — Show this help message\n` +
-        `• <b>/start</b> — Check account connection status\n\n` +
+        `• <b>/start</b> — Check connection status\n` +
+        `• <b>/unlink</b> — Disconnect this Telegram account\n` +
+        `• <b>/help</b> — Show this help message\n\n` +
         `📰 <b>About TAMDAN:</b>\n` +
         `We curate AI-summarized news digests every day at 7:00 AM based on your selected interests.\n\n` +
         `🌐 Manage your topics & profile: <a href="${SITE_URL}">${SITE_URL}</a>`,
@@ -272,7 +356,46 @@ export async function POST(req: NextRequest) {
     }
 
     // ==========================================
-    // 4. Default Echo
+    // 4. Handle /unlink
+    // ==========================================
+    if (cmdLower === "/unlink" || cmdLower === "unlink") {
+      try {
+        const { data: userToUnlink } = await supabase
+          .from("users")
+          .select("id, phone_number")
+          .eq("chat_id", String(chatId))
+          .maybeSingle();
+
+        if (!userToUnlink) {
+          await sendTelegramMessage(
+            chatId,
+            "ℹ️ This Telegram account is not currently linked to any TAMDAN account."
+          );
+          return Response.json({ status: "not_linked" });
+        }
+
+        await supabase
+          .from("users")
+          .update({ chat_id: null })
+          .eq("id", userToUnlink.id);
+
+        await sendTelegramMessage(
+          chatId,
+          `✅ <b>Unlinked successfully!</b>\n\n` +
+          `Your Telegram account has been disconnected from <b>${userToUnlink.phone_number}</b>.\n\n` +
+          `You can now connect this Telegram account to another phone number from the website: <a href="${SITE_URL}">${SITE_URL}</a>`,
+          { parse_mode: "HTML" }
+        );
+        return Response.json({ status: "unlinked" });
+      } catch (unlinkErr) {
+        console.error("[Telegram Webhook] Unlink error:", unlinkErr);
+        await sendTelegramMessage(chatId, "⚠️ Failed to unlink account. Please try again.");
+        return Response.json({ status: "error" });
+      }
+    }
+
+    // ==========================================
+    // 5. Default Echo
     // ==========================================
     await sendTelegramMessage(
       chatId,

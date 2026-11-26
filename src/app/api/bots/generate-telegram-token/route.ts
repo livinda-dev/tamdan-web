@@ -34,9 +34,9 @@ async function handlePost(req: NextRequest, _claims: JwtClaims): Promise<Respons
       );
     }
 
-    // Generate a unique one-time token
+    // Generate a unique one-time token (valid for 15 minutes)
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     // Store the token in the telegram_tokens table
     const { error: insertError } = await supabase.from("telegram_tokens").insert({
