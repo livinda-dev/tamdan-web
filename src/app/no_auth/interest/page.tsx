@@ -5,6 +5,15 @@ import GoogleSignInModal from "@/components/googleButton";
 import GenerateAgentButton from "@/components/GenerateAgentButton";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/alert";
+import {
+  ArrowRight,
+  Bot,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 
 export default function NoAuthLandingPage() {
   const router = useRouter();
@@ -138,64 +147,139 @@ export default function NoAuthLandingPage() {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="w-full bg-[#EFF0EC] py-8 sm:py-10 md:py-12 mt-8 sm:mt-12 md:mt-16">
-        <div className="max-w-7xl mx-auto">
-          {/* About TAMDAN */}
-          <div>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed font-normal text-[#1A1A1A]">
-              <span className="float-left text-5xl sm:text-6xl md:text-7xl font-bold leading-[0.8] mr-2 sm:mr-3 mt-1">
-                T
-              </span>
-              AMDAN is an intelligent, AI-powered search companion designed to
-              keep you informed and connected. Powered by advanced technologies
-              ncluding AI automation agents powered by n8n. TAMDAN goes beyond ordinary search —
-              it gathers real-time news, analyzes trusted sources, and delivers
-              personalized insights that matter to you.
+      {/* Features & Value Proposition Section */}
+      <section className="w-full bg-gradient-to-b from-[#EFF0EC] to-[#E5E7DF] py-12 sm:py-16 md:py-20 mt-12 sm:mt-16 md:mt-20 border-t border-slate-200/60">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+          {/* Header Banner */}
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-slate-200 shadow-xs text-xs sm:text-sm font-semibold text-[#00355A]">
+              <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <span>Personalized AI News Intelligence</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#00355A] tracking-tight">
+              The News You Care About. <span className="text-amber-600">Zero Noise.</span>
+            </h2>
+
+            <p className="text-sm sm:text-base md:text-lg text-slate-700 leading-relaxed font-normal">
+              <strong>TAMDAN</strong> is your intelligent AI companion designed to keep you effortlessly informed.
+              We continuously scan trusted global and regional news sources, eliminate clickbait and ads, and deliver concise,
+              high-signal intelligence tailored specifically to your chosen interests.
             </p>
           </div>
 
-          {/* Alert Info */}
-          <div className="mt-6 sm:mt-8 md:mt-10">
-            <p className="text-sm sm:text-base md:text-lg leading-relaxed">
-              Stay ahead effortlessly with instant alerts through Telegram chatbot
-              notifications or in-app messages whenever new updates match your
-              interests.
-            </p>
-          </div>
-
-          {/* Feature Cards */}
-          <div className="flex flex-col sm:flex-col lg:flex-row justify-between gap-4 sm:gap-6 md:gap-8 mt-6 sm:mt-8 md:mt-10 px-24">
-            <div className="flex items-center space-x-3 bg-white px-4 sm:px-6 py-4 sm:py-6 w-full lg:w-auto">
-              <img
-                src="/image/telegram.png"
-                alt="Telegram"
-                className="h-8 sm:h-10 w-auto flex-shrink-0"
-              />
-              <p className="text-sm sm:text-base md:text-lg font-medium">TELEGRAM CHATBOT</p>
+          {/* Key Value Highlights Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8 sm:mt-10 max-w-4xl mx-auto">
+            <div className="bg-white/90 backdrop-blur-xs p-4 rounded-xl border border-slate-200/80 shadow-xs text-center space-y-1">
+              <Clock className="w-5 h-5 text-[#00355A] mx-auto" />
+              <div className="font-bold text-sm sm:text-base text-[#00355A]">7:00 AM Delivery</div>
+              <div className="text-[11px] sm:text-xs text-slate-500">Fresh morning briefings</div>
             </div>
-
-            <div className="flex items-center space-x-3 bg-white px-4 sm:px-6 py-4 sm:py-6 w-full lg:w-auto">
-              <img src="/image/gmail.png" alt="Gmail" className="h-8 sm:h-10 w-auto flex-shrink-0" />
-              <p className="text-sm sm:text-base md:text-lg font-medium">ALERT BY GMAIL</p>
+            <div className="bg-white/90 backdrop-blur-xs p-4 rounded-xl border border-slate-200/80 shadow-xs text-center space-y-1">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 mx-auto" />
+              <div className="font-bold text-sm sm:text-base text-[#00355A]">Zero Noise & Spam</div>
+              <div className="text-[11px] sm:text-xs text-slate-500">Only verified trusted sources</div>
             </div>
-
-            <div className="flex items-center space-x-3 bg-white px-4 sm:px-6 py-4 sm:py-6 w-full lg:w-auto">
-              <img src="/image/sms.png" alt="SMS" className="h-8 sm:h-10 w-auto flex-shrink-0" />
-              <p className="text-sm sm:text-base md:text-lg font-medium">SMS MESSAGE APP</p>
+            <div className="bg-white/90 backdrop-blur-xs p-4 rounded-xl border border-slate-200/80 shadow-xs text-center space-y-1">
+              <Zap className="w-5 h-5 text-amber-500 mx-auto" />
+              <div className="font-bold text-sm sm:text-base text-[#00355A]">Custom AI Topics</div>
+              <div className="text-[11px] sm:text-xs text-slate-500">Track whatever matters to you</div>
+            </div>
+            <div className="bg-white/90 backdrop-blur-xs p-4 rounded-xl border border-slate-200/80 shadow-xs text-center space-y-1">
+              <Bot className="w-5 h-5 text-sky-600 mx-auto" />
+              <div className="font-bold text-sm sm:text-base text-[#00355A]">60-Sec Quick Setup</div>
+              <div className="text-[11px] sm:text-xs text-slate-500">Connect and let AI do the rest</div>
             </div>
           </div>
 
-          {/* Closing Text */}
-          <div className="mt-6 sm:mt-8 md:mt-10">
-            <p className="text-sm sm:text-base md:text-lg leading-relaxed">
-              Whether it is daily news, research insights, or topic-specific
-              trends, TAMDAN ensures you never miss what is important — your
-              intelligent search partner, powered by AI.
-            </p>
+          {/* Delivery Channels (Telegram + Email / Gmail) */}
+          <div className="mt-10 sm:mt-12">
+            <div className="text-center mb-6">
+              <h3 className="text-base sm:text-lg font-bold text-slate-800">
+                Delivered Straight to Where You Read
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Stay updated effortlessly across your favorite communication channels
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
+              {/* Telegram Channel Card */}
+              <div className="group bg-white rounded-2xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-[#0088cc]">
+                    <img src="/image/telegram.png" alt="Telegram" className="h-7 w-7 object-contain" />
+                  </div>
+                  <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-sky-100 text-[#0088cc]">
+                    Recommended
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-[#00355A] group-hover:text-blue-600 transition-colors">
+                    Telegram Bot Assistant
+                  </h4>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                    Receive your 7:00 AM news digests with interactive topic queries (<code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono text-[11px]">/topics</code>) directly inside your Telegram chat.
+                  </p>
+                </div>
+                <div className="pt-1 flex items-center text-xs font-semibold text-[#0088cc] gap-1">
+                  <span>Connect with @TamdanNews_bot</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+
+              {/* Email / Gmail Channel Card */}
+              <div className="group bg-white rounded-2xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-red-500">
+                    <img src="/image/gmail.png" alt="Gmail" className="h-7 w-7 object-contain" />
+                  </div>
+                  <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    Inbox Ready
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-[#00355A] group-hover:text-blue-600 transition-colors">
+                    Gmail Newsletter Briefing
+                  </h4>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                    A clean, distraction-free morning newsletter delivered straight to your inbox with direct links to verified original articles.
+                  </p>
+                </div>
+                <div className="pt-1 flex items-center text-xs font-semibold text-slate-700 gap-1">
+                  <span>Default on your Google account</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Call To Action Banner */}
+          <div className="mt-12 sm:mt-16 bg-[#00355A] text-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 text-center max-w-4xl mx-auto shadow-xl space-y-4 relative overflow-hidden">
+            <div className="relative z-10 space-y-3">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight">
+                Ready to Upgrade Your Daily Reading?
+              </h3>
+              <p className="text-xs sm:text-sm md:text-base text-blue-100/90 max-w-xl mx-auto leading-relaxed">
+                Whether it's AI breakthroughs, global stock market movements, or local tech startups — TAMDAN ensures you never miss what's critical to your success.
+              </p>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-[#00355A] font-bold text-sm sm:text-base shadow-lg transition-all cursor-pointer transform hover:-translate-y-0.5"
+                >
+                  <Sparkles className="w-4 h-4 fill-current" />
+                  <span>Start Free with TAMDAN</span>
+                </button>
+              </div>
+            </div>
+            {/* Subtle background decorative shapes */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           </div>
         </div>
-      </div>
+      </section>
 
       <GoogleSignInModal
         isOpen={isGoogleModalOpen}
